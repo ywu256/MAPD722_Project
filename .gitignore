@@ -55,6 +55,8 @@ ios/Flutter/
 ios/Runner.xcworkspace/
 ios/Podfile.lock
 ios/.generated/
+ios/Podfile
+macos/Podfile
 macos/Flutter/
 windows/flutter/ephemeral/
 linux/flutter/
