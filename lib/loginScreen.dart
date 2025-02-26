@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mapd722_project/PatientListScreen.dart';
 
 
 class LoginScreen extends StatefulWidget {
@@ -14,7 +15,9 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  
+  void _navigateToPatientList() async {
+    await Navigator.push(context, MaterialPageRoute(builder: (context) => PatientListPage()));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(height: 30),
               Center(
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: _navigateToPatientList,
                   child: const Text(
                     'Login',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
