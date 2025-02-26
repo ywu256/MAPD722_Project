@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'AddPatient.dart';
+import 'EditPatient.dart';
 
 class PatientListPage extends StatefulWidget {
   @override
@@ -21,17 +22,11 @@ class _PatientListState extends State<PatientListPage> {
   ];
 
   // To add a patient
-  Future<void> _addPatient() async {
-    final result = await Navigator.push(
+  void _addPatient() {
+    Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const AddPatientPage()),
     );
-
-    if (result != null && result is Map<String, dynamic>) {
-      setState(() {
-        patients.add(result);
-      });
-    }
   }
 
   // To delete a patient
@@ -42,7 +37,14 @@ class _PatientListState extends State<PatientListPage> {
   }
 
   // To edit a patient
-  void _editPatient(int index) {}
+  void _editPatient(int index) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditPatientPage(patientName: patients[index]['name']),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

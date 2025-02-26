@@ -13,9 +13,7 @@ class _AddPatientPageState extends State<AddPatientPage> {
 
   void _submit() {
     String name = _nameController.text.trim();
-    if (name.isNotEmpty) {
-      Navigator.pop(context, {'name': name, 'isCritical': _isCritical});
-    }
+    Navigator.pop(context, {'name': name, 'isCritical': _isCritical});
   }
 
   @override
