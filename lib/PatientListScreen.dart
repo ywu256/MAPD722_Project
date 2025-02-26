@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'AddPatientScreen.dart';
 import 'EditPatientScreen.dart';
+import 'PatientDetailsScreen.dart';
 
 class PatientListPage extends StatefulWidget {
   @override
@@ -34,6 +35,19 @@ class _PatientListState extends State<PatientListPage> {
     setState(() {
       patients.removeAt(index);
     });
+  }
+
+  // View patient's detail 
+  void _viewPatientDetails(int index) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PatientDetailsScreen(
+          patientName: patients[index]['name'],
+          isCritical: patients[index]['isCritical'],
+        ),
+      ),
+    );
   }
 
   // To edit a patient
@@ -95,8 +109,8 @@ class _PatientListState extends State<PatientListPage> {
                           Row(
                             children: [
                               IconButton(
-                                onPressed: () => _editPatient(index),
-                                icon: Icon(Icons.edit, color: Colors.black),
+                                onPressed: () => _viewPatientDetails(index),
+                                icon: const Icon(Icons.info, color: Colors.blue),
                                 iconSize: 30,
                               ),
                               IconButton(
