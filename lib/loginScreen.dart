@@ -42,7 +42,6 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 30),
 
               /*----- Username Field -----*/
-              // const Text('Username:', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               TextField(
                 controller: usernameController,
@@ -66,7 +65,6 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 20),
 
               /*----- Password Field -----*/
-              // const Text('Password:', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               TextField(
                 controller: passwordController,

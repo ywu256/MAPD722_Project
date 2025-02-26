@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'AddPatient.dart';
-import 'EditPatient.dart';
+import 'AddPatientScreen.dart';
+import 'EditPatientScreen.dart';
 
 class PatientListPage extends StatefulWidget {
   @override
