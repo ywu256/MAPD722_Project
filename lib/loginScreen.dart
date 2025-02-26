@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mapd722_project/PatientListScreen.dart';
+import 'ForgotPasswordScreen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,6 +18,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _navigateToPatientList() async {
     await Navigator.push(context, MaterialPageRoute(builder: (context) => PatientListPage()));
+  }
+
+  void _navigateToForgotPassword() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ForgotPasswordPage()),
+    );
   }
 
   @override
@@ -91,6 +99,17 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderSide: const BorderSide(color: Colors.blue, width: 2),
                   ),
                   hintText: "Enter Password",
+                ),
+              ),
+              /*----- Forgot Password -----*/
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: _navigateToForgotPassword,
+                  child: const Text(
+                    "Forgot Password?",
+                    style: TextStyle(fontSize: 16, color: Colors.blue, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
 
