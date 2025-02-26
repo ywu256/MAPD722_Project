@@ -11,6 +11,7 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
+pubspec.lock
 
 # IntelliJ related
 *.iml
@@ -43,3 +44,18 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# build related
+build/
+android/.gradle/
+android/app/build/
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/
+ios/Runner.xcworkspace/
+ios/Podfile.lock
+ios/.generated/
+macos/Flutter/ephemeral/
+windows/flutter/ephemeral/
+linux/flutter/ephemeral/
+web/
