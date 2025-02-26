@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mapd722_project/loginScreen.dart';
+import 'package:mapd722_project/LoginScreen.dart';
 
 void main() {
   runApp(const MyApp());
