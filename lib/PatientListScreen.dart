@@ -9,6 +9,8 @@ class PatientListPage extends StatefulWidget {
 
   class _PatientListState extends State<PatientListPage> {
 
+    final TextEditingController searchController = TextEditingController();
+
   // Listing some data
   List<Map<String, dynamic>> patients = [
     {'name': 'Patient 1', 'isCritical': false},
@@ -49,13 +51,17 @@ class PatientListPage extends StatefulWidget {
           child: 
           Row(
             children: [
-            // TextField(
-            //   decoration: InputDecoration(
-            //     hintText: 'Search',
-            //     prefixIcon: Icon(Icons.search),
-            //     border: OutlineInputBorder(borderRadius: BorderRadius.circular(10))),
-            // ),
-            IconButton(onPressed: ()=> _addPatient(), icon: Icon(Icons.person_add, color: Colors.black))
+              Expanded(
+                child: 
+            TextField(
+              controller: searchController,
+              decoration: InputDecoration(
+                hintText: 'Search', hintStyle: TextStyle(fontSize: 20),
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10))),
+            ),
+              ),
+            IconButton(onPressed: ()=> _addPatient(), icon: Icon(Icons.person_add, color: Colors.black), iconSize: 30,),
             ],
         ),),
             Expanded(
