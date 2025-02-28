@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mapd722_project/AddMeasurementScreen.dart';
 import 'EditPatientScreen.dart';
 
 class PatientDetailsScreen extends StatefulWidget {
@@ -12,15 +13,23 @@ class PatientDetailsScreen extends StatefulWidget {
 }
 
 class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
+   int _selectedIndex = 0;
   List<Map<String, String>> measurementHistory = [
     {"date": "2024-02-20", "value": "Blood Pressure: 120/80"},
   ];
 
   // Navigate to EditPatientScreen
-  void _editPatient() {}
+  void _editPatient() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => EditPatientPage(patientName: widget.patientName,)),
+    );
+  }
 
   // Navigate to AddMeasurementScreen
-  void _addMeasurement() {}
+  void _addMeasurement() {
+    Navigator.push(context, MaterialPageRoute(builder: (context) => AddMeasurementPage()));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,30 +41,43 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
           actions: [
             /*----- Edit Patient -----*/
             IconButton(
-              icon: const Icon(Icons.edit, color: Colors.white),
+              icon: const Icon(Icons.edit, color: Colors.black),
               onPressed: _editPatient,
             ),
           ],
-          bottom: const TabBar(
-            tabs: [
-              Tab(icon: Icon(Icons.info), text: "Details"),
-              Tab(icon: Icon(Icons.history), text: "Measurement History"),
-            ],
-          ),
+          // bottom: const TabBar(
+          //   tabs: [
+          //     Tab(icon: Icon(Icons.info), text: "Details"),
+          //     Tab(icon: Icon(Icons.history), text: "Measurement History"),
+          //   ],
+          // ),
         ),
-        body: TabBarView(
-          children: [
-            /*----- First Tab: Patient's Details -----*/
-            _buildDetailsTab(),
-            /*----- Second Tab: Patient's measurement History -----*/
-            _buildMeasurementHistoryTab(),
-          ],
-        ),
+        body: _selectedIndex == 0 ? _buildDetailsTab() : _buildMeasurementHistoryTab(),
+        // body: TabBarView(
+        //   children: [
+        //     /*----- First Tab: Patient's Details -----*/
+        //     _buildDetailsTab(),
+        //     /*----- Second Tab: Patient's measurement History -----*/
+        //     _buildMeasurementHistoryTab(),
+        //   ],
+        // ),
         floatingActionButton: FloatingActionButton(
           onPressed: _addMeasurement,
           backgroundColor: Colors.blue,
           child: const Icon(Icons.add, color: Colors.white),
         ),
+        bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.info), label: "Details"),
+          BottomNavigationBarItem(icon: Icon(Icons.history), label: "History"),
+        ],
+      ),
       ),
     );
   }
