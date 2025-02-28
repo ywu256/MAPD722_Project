@@ -45,22 +45,9 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
               onPressed: _editPatient,
             ),
           ],
-          // bottom: const TabBar(
-          //   tabs: [
-          //     Tab(icon: Icon(Icons.info), text: "Details"),
-          //     Tab(icon: Icon(Icons.history), text: "Measurement History"),
-          //   ],
-          // ),
         ),
         body: _selectedIndex == 0 ? _buildDetailsTab() : _buildMeasurementHistoryTab(),
-        // body: TabBarView(
-        //   children: [
-        //     /*----- First Tab: Patient's Details -----*/
-        //     _buildDetailsTab(),
-        //     /*----- Second Tab: Patient's measurement History -----*/
-        //     _buildMeasurementHistoryTab(),
-        //   ],
-        // ),
+  
         floatingActionButton: FloatingActionButton(
           onPressed: _addMeasurement,
           backgroundColor: Colors.blue,
