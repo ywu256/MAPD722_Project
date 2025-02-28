@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'AddPatientScreen.dart';
-import 'EditPatientScreen.dart';
 import 'PatientDetailsScreen.dart';
 
 class PatientListPage extends StatefulWidget {
@@ -46,16 +45,6 @@ class _PatientListState extends State<PatientListPage> {
           patientName: patients[index]['name'],
           isCritical: patients[index]['isCritical'],
         ),
-      ),
-    );
-  }
-
-  // To edit a patient
-  void _editPatient(int index) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EditPatientPage(patientName: patients[index]['name']),
       ),
     );
   }
