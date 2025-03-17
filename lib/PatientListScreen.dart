@@ -3,6 +3,8 @@ import 'AddPatientScreen.dart';
 import 'PatientDetailsScreen.dart';
 
 class PatientListPage extends StatefulWidget {
+  const PatientListPage({super.key});
+
   @override
   State<StatefulWidget> createState() {
     return _PatientListState();
