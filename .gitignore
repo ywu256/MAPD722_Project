@@ -12,6 +12,8 @@
 .swiftpm/
 migrate_working_dir/
 pubspec.lock
+gcp-key.json
+node_modules/
 
 # IntelliJ related
 *.iml
