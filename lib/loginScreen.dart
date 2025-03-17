@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mapd722_project/PatientListScreen.dart';
 import 'ForgotPasswordScreen.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,10 +16,58 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final String apiUrl = "http://localhost:3001/login"; 
   bool _isPasswordVisible = false;
+  bool _isLoading = false;
 
-  void _navigateToPatientList() async {
-    await Navigator.push(context, MaterialPageRoute(builder: (context) => PatientListPage()));
+  Future<void> _login() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final String username = usernameController.text.trim();
+    final String password = passwordController.text.trim();
+
+    if (username.isEmpty || password.isEmpty) {
+      _showMessage("Email and password cannot be empty");
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"email": username, "password": password}),
+      );
+
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        _showMessage("Login successful!");
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const PatientListPage()),
+        );
+      } else {
+        _showMessage(responseData["message"] ?? "Login failed");
+      }
+    } catch (error) {
+      _showMessage("Network error, please try again");
+    }
+
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   void _navigateToForgotPassword() {
@@ -127,7 +177,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    onPressed: _navigateToPatientList,
+                    onPressed: _isLoading ? null : _login,
                     child: const Text(
                       'Login',
                       style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
