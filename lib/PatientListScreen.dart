@@ -48,6 +48,8 @@ class _PatientListState extends State<PatientListPage> {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
           patients = data.map((patient) => {
+            '_id': patient['_id'],
+            'patientId': patient['patientId'],
             'name': patient['name'],
             'condition': patient['condition'],
           }).toList();
@@ -102,7 +104,8 @@ class _PatientListState extends State<PatientListPage> {
       MaterialPageRoute(
         builder: (context) => PatientDetailsScreen(
           patientName: patients[index]['name'],
-          isCritical: patients[index]['isCritical'],
+          patientId: patients[index]["_id"].toString(),
+          condition: patients[index]['condition'],
         ),
       ),
     );
@@ -147,7 +150,7 @@ class _PatientListState extends State<PatientListPage> {
                     final patient = patients[index];
                     return Card(
                       color: patient['condition'] == 'Critical'
-                          ? const Color.fromARGB(255, 220, 113, 105)
+                          ? const Color.fromARGB(255, 233, 144, 137)
                           : const Color.fromARGB(255, 230, 230, 230),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
