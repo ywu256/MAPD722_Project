@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:io' show Platform;
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -9,12 +10,27 @@ class ForgotPasswordPage extends StatefulWidget {
   _ForgotPasswordPageState createState() => _ForgotPasswordPageState();
 }
 
+String getLocalHostUrl() {
+  if (Platform.isAndroid) {
+    return 'http://10.0.2.2:3001'; // Android emulator localhost address
+  } else if (Platform.isIOS) {
+    return 'http://127.0.0.1:3001'; // iOS simulator localhost address
+  }
+  return 'http://localhost:3001'; // Fallback
+}
+
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final String apiUrl = "http://localhost:3001/reset-password"; 
+  late final String apiUrl; 
   bool _isPasswordVisible = false;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    apiUrl = '${getLocalHostUrl()}/login';  // Initialize in initState
+  }
 
   Future<void> _resetPassword() async {
     setState(() {

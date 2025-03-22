@@ -3,6 +3,7 @@ import 'package:mapd722_project/PatientListScreen.dart';
 import 'ForgotPasswordScreen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:io' show Platform;
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,12 +14,27 @@ class LoginScreen extends StatefulWidget {
   }
 }
 
+String getLocalHostUrl() {
+  if (Platform.isAndroid) {
+    return 'http://10.0.2.2:3001'; // Android emulator localhost address
+  } else if (Platform.isIOS) {
+    return 'http://127.0.0.1:3001'; // iOS simulator localhost address
+  }
+  return 'http://localhost:3001'; // Fallback
+}
+
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final String apiUrl = "http://localhost:3001/login"; 
+  late final String apiUrl; 
   bool _isPasswordVisible = false;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    apiUrl = '${getLocalHostUrl()}/login';  
+  }
 
   Future<void> _login() async {
     setState(() {
