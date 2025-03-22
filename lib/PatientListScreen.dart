@@ -155,9 +155,12 @@ class _PatientListState extends State<PatientListPage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            patient['name'] as String,
-                            style: TextStyle(fontSize: 20),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 16.0),
+                            child: Text(
+                              patient['name'] as String,
+                              style: TextStyle(fontSize: 20),
+                            ),
                           ),
                           Row(
                             children: [
