@@ -29,7 +29,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   @override
   void initState() {
     super.initState();
-    apiUrl = '${getLocalHostUrl()}/login';  // Initialize in initState
+    apiUrl = '${getLocalHostUrl()}/reset-password';  // Initialize in initState
   }
 
   Future<void> _resetPassword() async {
