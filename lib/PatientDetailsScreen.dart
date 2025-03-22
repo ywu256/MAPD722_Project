@@ -4,6 +4,7 @@ import 'EditPatientScreen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io' show Platform;
+import 'package:intl/intl.dart';
 
 class PatientDetailsScreen extends StatefulWidget {
   final String patientName;
@@ -129,25 +130,25 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("Patient Name:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          Text(widget.patientName, style: const TextStyle(fontSize: 18)),
+          //const Text("Patient Name:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(widget.patientName, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
 
           const SizedBox(height: 20),
 
-          const Text("Condition:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text("Condition:", style: TextStyle(fontSize: 18,)),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: widget.condition == 'Critical'
-                  ? const Color.fromARGB(255, 220, 113, 105) // Red for Critical
-                  : const Color.fromARGB(255, 230, 230, 230), // Gray for Stable
+                  ? const Color.fromARGB(255, 233, 144, 137) 
+                  : const Color.fromARGB(255, 230, 230, 230), 
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              widget.condition, // Display the condition directly
+              widget.condition, 
               style: TextStyle(
-                fontSize: 18,
-                color: widget.condition == 'Critical' ? Colors.white : Colors.black, // Text color
+                fontSize: 18, fontWeight: FontWeight.bold,
+                color: widget.condition == 'Critical' ? Colors.white : Colors.black, 
               ),
             ),
           ),
@@ -155,24 +156,34 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
           const SizedBox(height: 20),
 
           if (patientDetails != null) ...[
-            const Text("Additional Details:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            Text("Patient ID: ${patientDetails!['patientId']}", style: const TextStyle(fontSize: 18)),
-            Text("Age: ${patientDetails!['age']}", style: const TextStyle(fontSize: 18)),
-            Text("Gender: ${patientDetails!['gender']}", style: const TextStyle(fontSize: 18)),
-            Text("Admission Date: ${patientDetails!['admissionDate']}", style: const TextStyle(fontSize: 18)),
+            const Text("Additional Details:", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            Text("Patient ID: ${patientDetails!['patientId']}", style: const TextStyle(fontSize: 20)),
+            Text("Age: ${patientDetails!['age']}", style: const TextStyle(fontSize: 20)),
+            Text("Gender: ${patientDetails!['gender']}", style: const TextStyle(fontSize: 20)),
+            Text("Admission Date: ${_formatDate(patientDetails!['admissionDate'])}", style: const TextStyle(fontSize: 20)),
 
             const SizedBox(height: 20),
-            
-            const Text("Contact Details:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            Text("Phone: ${patientDetails!['phone']}", style: const TextStyle(fontSize: 18)),
-            Text("Email: ${patientDetails!['email']}", style: const TextStyle(fontSize: 18)),
-            Text("Address: ${patientDetails!['address']}", style: const TextStyle(fontSize: 18)),
-            Text("Emergency Contact: ${patientDetails!['emergencyContactPhone']}", style: const TextStyle(fontSize: 18)),
+
+            const Text("Contact Details:", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            Text("Phone: ${patientDetails!['phone']}", style: const TextStyle(fontSize: 20)),
+            Text("Email: ${patientDetails!['email']}", style: const TextStyle(fontSize: 20)),
+            Text("Address: ${patientDetails!['address']}", style: const TextStyle(fontSize: 20)),
+            Text("Emergency Contact: ${patientDetails!['emergencyContactPhone']}", style: const TextStyle(fontSize: 20)),
           ],
         ],
       ),
     );
   }
+
+  String _formatDate(String isoDate) {
+  try {
+    final DateTime dateTime = DateTime.parse(isoDate);
+    final DateFormat formatter = DateFormat('yyyy-MM-dd'); 
+    return formatter.format(dateTime);
+  } catch (e) {
+    return 'Invalid Date';
+  }
+}
 
   // Create a patient's measurement history page
   Widget _buildMeasurementHistoryTab() {
