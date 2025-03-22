@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'AddPatientScreen.dart';
 import 'PatientDetailsScreen.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:io' show Platform;
 
 class PatientListPage extends StatefulWidget {
   const PatientListPage({super.key});
@@ -11,17 +14,71 @@ class PatientListPage extends StatefulWidget {
   }
 }
 
+String getLocalHostUrl() {
+  if (Platform.isAndroid) {
+    return 'http://10.0.2.2:3001'; // Android emulator localhost address
+  } else if (Platform.isIOS) {
+    return 'http://127.0.0.1:3001'; // iOS simulator localhost address
+  }
+  return 'http://localhost:3001'; // Fallback
+}
+
 class _PatientListState extends State<PatientListPage> {
   final TextEditingController searchController = TextEditingController();
+  late final String apiUrl; 
+  List<Map<String, dynamic>> patients = [];
+  bool _isLoading = false;
 
-  // Listing some data
-  List<Map<String, dynamic>> patients = [
-    {'name': 'Patient 1', 'isCritical': false},
-    {'name': 'Patient 2', 'isCritical': true},
-    {'name': 'Patient 3', 'isCritical': false},
-    {'name': 'Patient 4', 'isCritical': true},
-    {'name': 'Patient 5', 'isCritical': false},
-  ];
+  @override
+  void initState() {
+    super.initState();
+    apiUrl = '${getLocalHostUrl()}/patients';  
+    _fetchPatients();
+  }
+
+  Future<void> _fetchPatients() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await http.get(Uri.parse(apiUrl));
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          patients = data.map((patient) => {
+            'name': patient['name'],
+            'condition': patient['condition'],
+          }).toList();
+
+          patients.sort((a,b) {
+            if (a['condition'] == 'Critical' && b['condition'] != 'Critical') {
+              return -1;
+            } else if (a['condition'] != 'Critical' && b['condition'] == 'Critical') {
+              return 1;
+            } else {
+              return 0;
+            }
+          });
+        });
+      } else {
+        _showMessage("Failed to load patients");
+      }
+    } catch (error) {
+      _showMessage("Network error. Please try again");
+    }
+
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
 
   // To add a patient
   void _addPatient() {
@@ -81,13 +138,15 @@ class _PatientListState extends State<PatientListPage> {
             ),
           ),
           Expanded(
-              child: ListView.builder(
+              child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+               : ListView.builder(
                   padding: EdgeInsets.all(18),
                   itemCount: patients.length,
                   itemBuilder: (context, index) {
                     final patient = patients[index];
                     return Card(
-                      color: patient['isCritical']
+                      color: patient['condition'] == 'Critical'
                           ? const Color.fromARGB(255, 220, 113, 105)
                           : const Color.fromARGB(255, 230, 230, 230),
                       child: Row(
