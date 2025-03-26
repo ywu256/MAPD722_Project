@@ -28,6 +28,8 @@ class _PatientListState extends State<PatientListPage> {
   late final String apiUrl; 
   List<Map<String, dynamic>> patients = [];
   bool _isLoading = false;
+  List<Map<String, dynamic>> filteredPatients = [];
+  String searchPatient = '';
 
   @override
   void initState() {
@@ -63,6 +65,7 @@ class _PatientListState extends State<PatientListPage> {
               return 0;
             }
           });
+          filteredPatients = List.from(patients);
         });
       } else {
         _showMessage("Failed to load patients");
@@ -82,6 +85,19 @@ class _PatientListState extends State<PatientListPage> {
     );
   }
 
+  void filterSearch(String query) {
+    setState(() {
+      searchPatient = query;
+      if(query.isEmpty) {
+        filteredPatients = List.from(patients);
+      } else {
+        filteredPatients = patients
+        .where((patient) => patient['name'].toLowerCase().contains(query.toLowerCase()))
+        .toList();
+      }
+    });
+  }
+
   // To add a patient
   void _addPatient() {
     Navigator.push(
@@ -91,10 +107,25 @@ class _PatientListState extends State<PatientListPage> {
   }
 
   // To delete a patient
-  void _deletePatient(int index) {
-    setState(() {
-      patients.removeAt(index);
-    });
+  void _deletePatient(int index) async {
+    final patient = patients[index];
+    final patientId = patient['_id'];
+
+    try{
+      final response = await http.delete(Uri.parse('$apiUrl/$patientId'));
+
+      if(response.statusCode == 200) {
+        setState(() {
+          patients.removeAt(index);
+          filteredPatients = List.from(patients);
+        });
+        _showMessage("Patient deleted successfully.");
+      } else {
+        _showMessage("Failed to delete patient");
+      }
+    } catch(error) {
+      _showMessage("Network error. Please try again.");
+    }
   }
 
   // View patient's detail 
@@ -124,10 +155,11 @@ class _PatientListState extends State<PatientListPage> {
                 Expanded(
                   child: TextField(
                     controller: searchController,
+                    onChanged: (value) => filterSearch(value),
                     decoration: InputDecoration(
                         hintText: 'Search',
                         hintStyle: TextStyle(fontSize: 20),
-                        prefixIcon: Icon(Icons.search),
+                        prefixIcon: Icon(Icons.search, size: 30,),
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10))),
                   ),
@@ -143,12 +175,20 @@ class _PatientListState extends State<PatientListPage> {
           Expanded(
               child: _isLoading
               ? const Center(child: CircularProgressIndicator())
+              : filteredPatients.isEmpty
+                    ? const Center(
+                        child: Text(
+                          "No patients found",
+                          style: TextStyle(fontSize: 20, color: Colors.grey),
+                        ),
+                      )
                : ListView.builder(
                   padding: EdgeInsets.all(18),
-                  itemCount: patients.length,
+                  itemCount: filteredPatients.length,
                   itemBuilder: (context, index) {
-                    final patient = patients[index];
+                    final patient = filteredPatients[index];
                     return Card(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
                       color: patient['condition'] == 'Critical'
                           ? const Color.fromARGB(255, 233, 144, 137)
                           : const Color.fromARGB(255, 230, 230, 230),
@@ -157,9 +197,17 @@ class _PatientListState extends State<PatientListPage> {
                         children: [
                           Padding(
                             padding: const EdgeInsets.only(left: 16.0),
-                            child: Text(
-                              patient['name'] as String,
-                              style: TextStyle(fontSize: 20),
+                            child:  
+                            Row(
+                              children: [
+                                Text(patient['patientId'] as String,
+                                  style: TextStyle(fontSize: 18),
+                                ),
+                                SizedBox(width: 20,),
+                                Text(patient['name'] as String,
+                                  style: TextStyle(fontSize: 20),
+                                ),
+                              ],
                             ),
                           ),
                           Row(
