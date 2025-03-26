@@ -28,19 +28,19 @@ String getLocalHostUrl() {
 
 class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
    int _selectedIndex = 0;
-  List<Map<String, String>> measurementHistory = [
-    {"date": "2024-02-20", "value": "Blood Pressure: 120/80"},
-  ];
+  List<Map<String, String>> measurementHistory = [];
 
   Map<String, dynamic>? patientDetails;
   late final String apiUrl;
   bool _isLoading = true;
+  bool _isMeasurementLoading = true;
 
   @override
   void initState() {
     super.initState();
     apiUrl = '${getLocalHostUrl()}/patients/${widget.patientId}';
     _fetchPatientDetails();
+    _fetchPatientClinicalData();
   }
 
   Future<void> _fetchPatientDetails() async {
@@ -64,6 +64,30 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
     });
   }
 
+  Future<void> _fetchPatientClinicalData() async {
+    try {
+      final response = await http.get(Uri.parse('${getLocalHostUrl()}/clinical/${widget.patientId}'));
+
+      if(response.statusCode == 200) {
+        final List<dynamic> clinicalData = jsonDecode(response.body);
+        setState(() {
+          measurementHistory = clinicalData.map((measurement) {
+            return {
+              'type': (measurement['type'] ?? '').toString(),
+              'value': (measurement['value']?? '').toString(),
+              'dateTime': (measurement['dateTime']?? '').toString(),
+            };
+          }).toList();
+          _isMeasurementLoading = false;
+        });
+      } else {
+        _showMessage("Failed to load patient details");
+      }
+    } catch (error) {
+      _showMessage("Network error. Please try again");
+    }
+  }
+
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
@@ -79,8 +103,11 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
   }
 
   // Navigate to AddMeasurementScreen
-  void _addMeasurement() {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => AddMeasurementPage()));
+  void _addMeasurement() async{
+    Navigator.push(
+      context, 
+      MaterialPageRoute(builder: (context) => AddMeasurementPage()));
+      _fetchPatientClinicalData();
   }
 
   @override
@@ -135,7 +162,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
 
           const SizedBox(height: 20),
 
-          const Text("Condition:", style: TextStyle(fontSize: 18,)),
+          const Text("Condition:", style: TextStyle(fontSize: 20,)),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
@@ -187,6 +214,17 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
 
   // Create a patient's measurement history page
   Widget _buildMeasurementHistoryTab() {
+    if (_isMeasurementLoading) {
+      return const Center(child: CircularProgressIndicator(),);
+    }
+    if (measurementHistory.isEmpty) {
+    return const Center(
+      child: Text(
+        "No measurements recorded",
+        style: TextStyle(fontSize: 20, color: Colors.grey),
+      ),
+    );
+  }
     return ListView.builder(
       padding: const EdgeInsets.all(20),
       itemCount: measurementHistory.length,
@@ -194,9 +232,17 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
         final measurement = measurementHistory[index];
         return Card(
           child: ListTile(
-            leading: const Icon(Icons.monitor_heart, color: Colors.blue),
-            title: Text(measurement["value"]!),
-            subtitle: Text("Date: ${measurement["date"]}"),
+            leading: const Icon(Icons.monitor_heart, color: Colors.blue, size: 30,),
+            title: Text(measurement["type"]!, style: TextStyle(fontSize: 20),),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(measurement["value"] ?? '', 
+                  style: TextStyle(fontSize: 20),),
+                Text(measurement["dateTime"] ?? '', 
+                  style: TextStyle(fontSize: 20),), 
+              ],
+            ),
           ),
         );
       },
