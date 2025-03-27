@@ -98,7 +98,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
   void _editPatient() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => EditPatientPage(patientName: widget.patientName,)),
+      MaterialPageRoute(builder: (context) => EditPatientPage(patientId: widget.patientId)),
     );
   }
 
