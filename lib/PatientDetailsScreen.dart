@@ -152,55 +152,106 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
 
   // Create a patient's details page
   Widget _buildDetailsTab() {
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          //const Text("Patient Name:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          Text(widget.patientName, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+          /* --- Patient's Photo --- */
+          if (patientDetails != null && patientDetails!['photoUrl'] != null)
+            Center(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(100),
+                child: Image.network(
+                  patientDetails!['photoUrl'],
+                  height: 150,
+                  width: 150,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, size: 150),
+                ),
+              ),
+            ),
 
           const SizedBox(height: 20),
 
-          const Text("Condition:", style: TextStyle(fontSize: 20,)),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: widget.condition == 'Critical'
-                  ? const Color.fromARGB(255, 233, 144, 137) 
-                  : const Color.fromARGB(255, 230, 230, 230), 
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              widget.condition, 
-              style: TextStyle(
-                fontSize: 18, fontWeight: FontWeight.bold,
-                color: widget.condition == 'Critical' ? Colors.white : Colors.black, 
-              ),
+          /* --- Patient's Name and Condition --- */
+          Center(
+            child: Column(
+              children: [
+                Text(
+                  widget.patientName,
+                  style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: widget.condition == 'Critical'
+                        ? const Color.fromARGB(255, 233, 144, 137)
+                        : const Color.fromARGB(255, 230, 230, 230),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    widget.condition,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: widget.condition == 'Critical' ? Colors.white : Colors.black,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: 30),
 
           if (patientDetails != null) ...[
-            const Text("Additional Details:", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            Text("Patient ID: ${patientDetails!['patientId']}", style: const TextStyle(fontSize: 20)),
-            Text("Age: ${patientDetails!['age']}", style: const TextStyle(fontSize: 20)),
-            Text("Gender: ${patientDetails!['gender']}", style: const TextStyle(fontSize: 20)),
-            Text("Admission Date: ${_formatDate(patientDetails!['admissionDate'])}", style: const TextStyle(fontSize: 20)),
+            /* --- Patient's Personal Info --- */
+            const Text("Personal Info", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            _buildInfoRow("Patient ID", patientDetails?['patientId']),
+            _buildInfoRow("Age", patientDetails?['age']?.toString()),
+            _buildInfoRow("Gender", patientDetails?['gender']),
+            _buildInfoRow("Blood Type", patientDetails?['bloodType']),
+            _buildInfoRow("Admission Date", _formatDate(patientDetails?['admissionDate'])),
 
             const SizedBox(height: 20),
 
-            const Text("Contact Details:", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            Text("Phone: ${patientDetails!['phone']}", style: const TextStyle(fontSize: 20)),
-            Text("Email: ${patientDetails!['email']}", style: const TextStyle(fontSize: 20)),
-            Text("Address: ${patientDetails!['address']}", style: const TextStyle(fontSize: 20)),
-            Text("Emergency Contact: ${patientDetails!['emergencyContactPhone']}", style: const TextStyle(fontSize: 20)),
+            /* --- Patient's Contact Info --- */
+            const Text("Contact Info", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            _buildInfoRow("Phone", patientDetails?['phone']),
+            _buildInfoRow("Email", patientDetails?['email']),
+            _buildInfoRow("Address", patientDetails?['address']),
+            _buildInfoRow("Emergency Contact", patientDetails?['emergencyContactPhone']),
+
+            const SizedBox(height: 20),
+
+            /* --- Patient's Medical Details --- */
+            const Text("Medical Details", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            _buildInfoRow("Medical History", patientDetails?['medicalHistory']),
+            _buildInfoRow("Allergies", patientDetails?['allergies']),
           ],
         ],
       ),
     );
   }
+
+  Widget _buildInfoRow(String label, String? value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(width: 140, child: Text("$label:", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500))),
+          Expanded(child: Text(value ?? "N/A", style: const TextStyle(fontSize: 16))),
+        ],
+      ),
+    );
+  }
+
 
   String _formatDate(String isoDate) {
   try {
