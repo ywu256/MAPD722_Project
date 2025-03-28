@@ -95,13 +95,13 @@ class _EditPatientPageState extends State<EditPatientPage> {
 
     if (response.statusCode == 200) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Patient updated successfully")));
-      Navigator.pop(context);
+      Navigator.pop(context, 'updated');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Failed to update patient")));
     }
   }
 
-  Widget _buildInputField(String label, TextEditingController controller, {TextInputType keyboardType = TextInputType.text}) {
+  Widget _buildInputField(String label, TextEditingController controller, {TextInputType keyboardType = TextInputType.text, bool isRequired = true}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextFormField(
@@ -113,7 +113,7 @@ class _EditPatientPageState extends State<EditPatientPage> {
           filled: true,
           fillColor: Colors.grey[200],
         ),
-        validator: (value) => value == null || value.trim().isEmpty ? '$label is required' : null,
+        validator: isRequired ? (value) => value == null || value.trim().isEmpty ? '$label is required' : null : null,
       ),
     );
   }
@@ -187,8 +187,8 @@ class _EditPatientPageState extends State<EditPatientPage> {
                     const SizedBox(height: 20),
                     const Text("Medical Details", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 10),
-                    _buildInputField("Medical History", _medicalController),
-                    _buildInputField("Allergies", _allergyController),
+                    _buildInputField("Medical History", _medicalController, isRequired: false),
+                    _buildInputField("Allergies", _allergyController, isRequired: false),
 
                     const SizedBox(height: 30),
                     SizedBox(

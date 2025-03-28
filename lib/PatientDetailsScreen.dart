@@ -95,11 +95,19 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
   }
 
   // Navigate to EditPatientScreen
-  void _editPatient() {
-    Navigator.push(
+  void _editPatient() async {
+    final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => EditPatientPage(patientId: widget.patientId)),
+      MaterialPageRoute(
+        builder: (context) => EditPatientPage(
+          patientId: widget.patientId,
+        ),
+      ),
     );
+
+    if (result == 'updated') {
+      _fetchPatientDetails();
+    }
   }
 
   // Navigate to AddMeasurementScreen
@@ -116,7 +124,6 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: Text("${widget.patientName} Details"),
           actions: [
             /*----- Edit Patient -----*/
             IconButton(
