@@ -99,12 +99,16 @@ class _PatientListState extends State<PatientListPage> {
   }
 
   // To add a patient
-  void _addPatient() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const AddPatientPage()),
-    );
+  void _addPatient() async {
+  final result = await Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => const AddPatientPage()),
+  );
+
+  if (result == 'added') {
+    _fetchPatients();
   }
+}
 
   // To delete a patient
   void _deletePatient(int index) async {
