@@ -25,7 +25,7 @@ String getLocalHostUrl() {
 
 class _PatientListState extends State<PatientListPage> {
   final TextEditingController searchController = TextEditingController();
-  late final String apiUrl; 
+  late final String apiUrl;
   List<Map<String, dynamic>> patients = [];
   bool _isLoading = false;
   List<Map<String, dynamic>> filteredPatients = [];
@@ -34,7 +34,7 @@ class _PatientListState extends State<PatientListPage> {
   @override
   void initState() {
     super.initState();
-    apiUrl = '${getLocalHostUrl()}/patients';  
+    apiUrl = '${getLocalHostUrl()}/patients';
     _fetchPatients();
   }
 
@@ -100,27 +100,24 @@ class _PatientListState extends State<PatientListPage> {
 
   // To add a patient
   void _addPatient() async {
-  final result = await Navigator.push(
-    context,
-    MaterialPageRoute(builder: (context) => const AddPatientPage()),
-  );
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AddPatientPage()),
+    );
 
-  if (result == 'added') {
-    _fetchPatients();
+    if (result == 'added') {
+      _fetchPatients();
+    }
   }
-}
-
+  
   // To delete a patient
-  void _deletePatient(int index) async {
-    final patient = patients[index];
-    final patientId = patient['_id'];
-
+  void _deletePatient(String patientId) async {
     try{
       final response = await http.delete(Uri.parse('$apiUrl/$patientId'));
 
       if(response.statusCode == 200) {
         setState(() {
-          patients.removeAt(index);
+          patients.removeWhere((p) => p['_id'] == patientId);
           filteredPatients = List.from(patients);
         });
         _showMessage("Patient deleted successfully.");
@@ -132,15 +129,14 @@ class _PatientListState extends State<PatientListPage> {
     }
   }
 
-  // View patient's detail 
-  void _viewPatientDetails(int index) {
+  void _viewPatientDetails(Map<String, dynamic> patient) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => PatientDetailsScreen(
-          patientName: patients[index]['name'],
-          patientId: patients[index]["_id"].toString(),
-          condition: patients[index]['condition'],
+          patientName: patient['name'],
+          patientId: patient["_id"].toString(),
+          condition: patient['condition'],
         ),
       ),
     );
@@ -169,7 +165,7 @@ class _PatientListState extends State<PatientListPage> {
                   ),
                 ),
                 IconButton(
-                  onPressed: () => _addPatient(),
+                  onPressed: _addPatient,
                   icon: Icon(Icons.person_add, color: Colors.black),
                   iconSize: 30,
                 ),
@@ -191,47 +187,70 @@ class _PatientListState extends State<PatientListPage> {
                   itemCount: filteredPatients.length,
                   itemBuilder: (context, index) {
                     final patient = filteredPatients[index];
-                    return Card(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-                      color: patient['condition'] == 'Critical'
-                          ? const Color.fromARGB(255, 233, 144, 137)
-                          : const Color.fromARGB(255, 230, 230, 230),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(left: 16.0),
-                            child:  
-                            Row(
-                              children: [
-                                Text(patient['patientId'] as String,
-                                  style: TextStyle(fontSize: 18),
-                                ),
-                                SizedBox(width: 20,),
-                                Text(patient['name'] as String,
-                                  style: TextStyle(fontSize: 20),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Row(
-                            children: [
-                              IconButton(
-                                onPressed: () => _viewPatientDetails(index),
-                                icon: const Icon(Icons.info, color: Colors.blue),
-                                iconSize: 30,
+                    return Dismissible(
+                      key: Key(patient['_id']),
+                      direction: DismissDirection.endToStart,
+                      background: Container(
+                        color: Colors.red,
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: const Icon(Icons.delete, color: Colors.white),
+                      ),
+                      confirmDismiss: (direction) async {
+                        final shouldDelete = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text("Confirm Deletion"),
+                            content: const Text("Are you sure you want to delete this patient?"), 
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text("Cancel"),
                               ),
-                              IconButton(
-                                onPressed: () => _deletePatient(index),
-                                icon: Icon(
-                                  Icons.delete,
-                                  color: Colors.red,
-                                ),
-                                iconSize: 30,
-                              )
+                              ElevatedButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text("Delete"),
+                              ),
                             ],
                           ),
-                        ],
+                        );
+
+                        if (shouldDelete == true) {
+                          _deletePatient(patient['_id']);
+                          return true; // Allow to Dismiss
+                        }
+                        return false; // No Allow to Dismiss
+                      },
+                      child: Card(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                        color: patient['condition'] == 'Critical'
+                            ? const Color.fromARGB(255, 233, 144, 137)
+                            : const Color.fromARGB(255, 230, 230, 230),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(left: 16.0),
+                              child:
+                              Row(
+                                children: [
+                                  Text(patient['patientId'] as String,
+                                    style: TextStyle(fontSize: 18),
+                                  ),
+                                  SizedBox(width: 20,),
+                                  Text(patient['name'] as String,
+                                    style: TextStyle(fontSize: 20),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () => _viewPatientDetails(patient),
+                              icon: const Icon(Icons.info, color: Colors.blue),
+                              iconSize: 30,
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   }))
