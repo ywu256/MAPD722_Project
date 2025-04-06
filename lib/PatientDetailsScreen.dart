@@ -71,24 +71,36 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
 
       if(response.statusCode == 200) {
         final List<dynamic> clinicalData = jsonDecode(response.body);
-        setState(() {
-          measurementHistory = clinicalData.map((measurement) {
-            return {
+        // Coverting date to sort
+        List<Map<String, String>> measurements = clinicalData.map((measurement) {
+          return {
               'type': (measurement['type'] ?? '').toString(),
               'value': (measurement['value']?? '').toString(),
               'dateTime': (measurement['dateTime']?? '').toString(),
             };
           }).toList();
-        });
-      } else {
-        _showMessage("Failed to load clinical data: ${response.statusCode}");
+          // Sort in descending order
+          measurements.sort((a,b) {
+            try {
+              final DateA = DateTime.parse(a['dateTime']!);
+              final DateB =  DateTime.parse(b['dateTime']!);
+              return DateB.compareTo(DateA);
+            } catch (error) {
+              return 0;
+            }
+          });
+          setState(() {
+            measurementHistory = measurements;
+          });
+        } else {
+          _showMessage("Failed to load clinical data: ${response.statusCode}");
+        }
+      } catch (error) {
+        _showMessage("Network error: ${error.toString()}");
+      } finally {
+        setState(() => _isMeasurementLoading = false);
       }
-    } catch (error) {
-      _showMessage("Network error: ${error.toString()}");
-    } finally {
-      setState(() => _isMeasurementLoading = false);
     }
-  }
 
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -119,7 +131,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
     MaterialPageRoute(
       builder: (context) => AddMeasurementPage(
         patientId: widget.patientId,
-        patientName: widget.patientName, // Pass required fields
+        patientName: widget.patientName,
       ),
     ),
   );
@@ -127,7 +139,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
   if (result != null && result['refresh'] == true) {
     _fetchPatientClinicalData();
     if (result['isAbnormal'] == true) {
-      _fetchPatientDetails(); // Refresh patient data if condition changed
+      _fetchPatientDetails(); 
     }
   }
 }
@@ -285,7 +297,6 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
 }
 
   // Create a patient's measurement history page
-  // Create a patient's measurement history page
 Widget _buildMeasurementHistoryTab() {
   if (_isMeasurementLoading) {
     return const Center(child: CircularProgressIndicator());
@@ -393,8 +404,8 @@ bool _isCriticalMeasurement(Map<String, String> measurement) {
       default:
         return false;
     }
-  } catch (e) {
-    debugPrint('Error checking critical measurement: $e');
+  } catch (error) {
+    debugPrint('Error checking critical measurement: $error');
     return false;
   }
 }
