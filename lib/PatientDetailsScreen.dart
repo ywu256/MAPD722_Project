@@ -65,6 +65,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
   }
 
   Future<void> _fetchPatientClinicalData() async {
+    setState(() => _isMeasurementLoading = true);
     try {
       final response = await http.get(Uri.parse('${getLocalHostUrl()}/clinical/${widget.patientId}'));
 
@@ -78,13 +79,14 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
               'dateTime': (measurement['dateTime']?? '').toString(),
             };
           }).toList();
-          _isMeasurementLoading = false;
         });
       } else {
-        _showMessage("Failed to load patient details");
+        _showMessage("Failed to load clinical data: ${response.statusCode}");
       }
     } catch (error) {
-      _showMessage("Network error. Please try again");
+      _showMessage("Network error: ${error.toString()}");
+    } finally {
+      setState(() => _isMeasurementLoading = false);
     }
   }
 
@@ -112,10 +114,17 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
 
   // Navigate to AddMeasurementScreen
   void _addMeasurement() async{
-    Navigator.push(
+    final result = await Navigator.push(
       context, 
-      MaterialPageRoute(builder: (context) => AddMeasurementPage()));
+      MaterialPageRoute(
+        builder: (context) => AddMeasurementPage(
+          patientId: widget.patientId
+        )
+      )
+    );
+    if (result == 'added') {
       _fetchPatientClinicalData();
+    }
   }
 
   @override
@@ -289,16 +298,21 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
       itemBuilder: (context, index) {
         final measurement = measurementHistory[index];
         return Card(
+          elevation: 3,
+          margin: const EdgeInsets.only(bottom: 15),
           child: ListTile(
             leading: const Icon(Icons.monitor_heart, color: Colors.blue, size: 30,),
-            title: Text(measurement["type"]!, style: TextStyle(fontSize: 20),),
+            title: Text(
+              measurement["type"]!, 
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(measurement["value"] ?? '', 
-                  style: TextStyle(fontSize: 20),),
+                  style: TextStyle(fontSize: 16),),
+                  const SizedBox(height: 3),
                 Text(measurement["dateTime"] ?? '', 
-                  style: TextStyle(fontSize: 20),), 
+                  style: TextStyle(fontSize: 14, color: Colors.grey),), 
               ],
             ),
           ),

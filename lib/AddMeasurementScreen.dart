@@ -1,13 +1,25 @@
 import 'package:flutter/material.dart';
-
+import 'dart:io' show Platform;
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class AddMeasurementPage extends StatefulWidget{
-const AddMeasurementPage({super.key});
+  final String patientId;
+const AddMeasurementPage({super.key, required this.patientId});
 
   @override
   State<StatefulWidget> createState() {
     return _AddMeasurementState();
   }
+}
+
+String getLocalHostUrl() {
+  if (Platform.isAndroid) {
+    return 'http://10.0.2.2:3001'; // Android emulator localhost address
+  } else if (Platform.isIOS) {
+    return 'http://127.0.0.1:3001'; // iOS simulator localhost address
+  }
+  return 'http://localhost:3001'; // Fallback
 }
 
 class _AddMeasurementState extends State<AddMeasurementPage> {
@@ -24,6 +36,7 @@ static const List<String> measurementTypes = <String>[
   final TextEditingController valueController = TextEditingController();
   final TextEditingController sysController = TextEditingController();
   final TextEditingController diaController = TextEditingController();
+  bool _isLoading = false;
 
   // Time picker to select time
   TimeOfDay selectedTime = TimeOfDay.now();
@@ -58,33 +71,65 @@ static const List<String> measurementTypes = <String>[
     }
   }
 
-  void _submit () {
-    String selectedMeasurement = dropdownvalue;
-    String enteredValue = '';
-
-    switch (selectedMeasurement) {
-      case "Blood Pressure": 
-      enteredValue = '${sysController.text.trim()} / ${diaController.text.trim()} mmHg';
-      break;
-
-      case "Heartbeat Rate":
-      enteredValue = '${valueController.text.trim()} bpm';
-      break;
-
-      case "Blood Oxygen Level":
-      enteredValue = '${valueController.text.trim()} %';
-      break;
-
-      case "Respiratory rate":
-      enteredValue = '${valueController.text.trim()} breaths/min';
-      break;
-    }
-
-    Navigator.pop(context, {
-      'measurementType': selectedMeasurement,
-      'value': enteredValue,
+  Future<void> _submit () async {
+    setState(() {
+      _isLoading = true;
     });
+    try {
+      final measurementDateTime = DateTime(
+        selectedDate.year,
+        selectedDate.month,
+        selectedDate.day,
+        selectedTime.hour,
+        selectedTime.minute,
+      );
+      Map<String, dynamic> measurementData = {
+        'patient_id': widget.patientId,
+        'type': dropdownvalue,
+        'dateTime': measurementDateTime.toIso8601String(),
+      };
+      switch (dropdownvalue) {
+        case "Blood Pressure":
+          measurementData['value'] = '${sysController.text.trim()}/${diaController.text.trim()} mmHg';
+          measurementData['systolic'] = int.tryParse(sysController.text.trim());
+          measurementData['diastolic'] = int.tryParse(diaController.text.trim());
+          break;
+        case "Heartbeat Rate":
+          measurementData['value'] = '${valueController.text.trim()} bpm';
+          measurementData['bpm'] = int.tryParse(valueController.text.trim());
+          break;
+        case "Blood Oxygen Level":
+          measurementData['value'] = '${valueController.text.trim()} %';
+          measurementData['spo2'] = int.tryParse(valueController.text.trim());
+          break;
+        case "Respiratory Rate":
+          measurementData['value'] = '${valueController.text.trim()} breaths/min';
+          measurementData['respiratoryRate'] = int.tryParse(valueController.text.trim());
+          break;
+      }
+
+      final response = await http.post(
+        Uri.parse('${getLocalHostUrl()}/clinical'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(measurementData),
+      );
+
+      if (response.statusCode == 201) {
+        Navigator.pop(context, 'added');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save measurement: ${response.body}')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -234,8 +279,11 @@ static const List<String> measurementTypes = <String>[
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: _submit,
-                  child: const Text("Submit", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                  onPressed: _isLoading ? null : _submit,
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text("Submit", 
+                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                 ),
               ),
             ),
