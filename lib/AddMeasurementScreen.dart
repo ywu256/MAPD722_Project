@@ -5,7 +5,13 @@ import 'dart:convert';
 
 class AddMeasurementPage extends StatefulWidget{
   final String patientId;
-const AddMeasurementPage({super.key, required this.patientId});
+  final String patientName;
+  final Map<String, dynamic>? patientDetails;
+
+const AddMeasurementPage({super.key, 
+  required this.patientId,
+  required this.patientName,
+  this.patientDetails});
 
   @override
   State<StatefulWidget> createState() {
@@ -71,64 +77,127 @@ static const List<String> measurementTypes = <String>[
     }
   }
 
-  Future<void> _submit () async {
-    setState(() {
-      _isLoading = true;
-    });
-    try {
-      final measurementDateTime = DateTime(
-        selectedDate.year,
-        selectedDate.month,
-        selectedDate.day,
-        selectedTime.hour,
-        selectedTime.minute,
-      );
-      Map<String, dynamic> measurementData = {
-        'patient_id': widget.patientId,
-        'type': dropdownvalue,
-        'dateTime': measurementDateTime.toIso8601String(),
-      };
-      switch (dropdownvalue) {
-        case "Blood Pressure":
-          measurementData['value'] = '${sysController.text.trim()}/${diaController.text.trim()} mmHg';
-          measurementData['systolic'] = int.tryParse(sysController.text.trim());
-          measurementData['diastolic'] = int.tryParse(diaController.text.trim());
-          break;
-        case "Heartbeat Rate":
-          measurementData['value'] = '${valueController.text.trim()} bpm';
-          measurementData['bpm'] = int.tryParse(valueController.text.trim());
-          break;
-        case "Blood Oxygen Level":
-          measurementData['value'] = '${valueController.text.trim()} %';
-          measurementData['spo2'] = int.tryParse(valueController.text.trim());
-          break;
-        case "Respiratory Rate":
-          measurementData['value'] = '${valueController.text.trim()} breaths/min';
-          measurementData['respiratoryRate'] = int.tryParse(valueController.text.trim());
-          break;
-      }
+  Future<void> _submit() async {
+  setState(() => _isLoading = true);
 
-      final response = await http.post(
-        Uri.parse('${getLocalHostUrl()}/clinical'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(measurementData),
-      );
+  try {
+    // 1. Prepare measurement data
+    final measurementDateTime = DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+      selectedTime.hour,
+      selectedTime.minute,
+    );
 
-      if (response.statusCode == 201) {
-        Navigator.pop(context, 'added');
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save measurement: ${response.body}')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
-      );
-    } finally {
-      setState(() => _isLoading = false);
+    Map<String, dynamic> measurementData = {
+      'patient_id': widget.patientId,
+      'type': dropdownvalue,
+      'dateTime': measurementDateTime.toIso8601String(),
+    };
+
+    bool isAbnormal = false;
+    int? numericValue1;
+    int? numericValue2;
+
+    // 2. Parse values and check for abnormalities
+    switch (dropdownvalue) {
+      case "Blood Pressure":
+        numericValue1 = int.tryParse(sysController.text.trim());
+        numericValue2 = int.tryParse(diaController.text.trim());
+        if (numericValue1 == null || numericValue2 == null) {
+          throw Exception("Please enter valid numbers for blood pressure");
+        }
+        
+        measurementData['value'] = '$numericValue1/${numericValue2} mmHg';
+        measurementData['systolic'] = numericValue1;
+        measurementData['diastolic'] = numericValue2;
+        
+        isAbnormal = numericValue1 > 180 || 
+                    numericValue1 < 90 || 
+                    numericValue2 > 120 || 
+                    numericValue2 < 60;
+        break;
+
+      case "Heartbeat Rate":
+        numericValue1 = int.tryParse(valueController.text.trim());
+        if (numericValue1 == null) {
+          throw Exception("Please enter a valid number for heartbeat rate");
+        }
+        
+        measurementData['value'] = '$numericValue1 bpm';
+        measurementData['bpm'] = numericValue1;
+        
+        isAbnormal = numericValue1 < 60 || numericValue1 > 100;
+        break;
+
+      case "Blood Oxygen Level":
+        numericValue1 = int.tryParse(valueController.text.trim());
+        if (numericValue1 == null) {
+          throw Exception("Please enter a valid number for blood oxygen level");
+        }
+        
+        measurementData['value'] = '$numericValue1 %';
+        measurementData['spo2'] = numericValue1;
+        
+        isAbnormal = numericValue1 < 90;
+        break;
+
+      case "Respiratory Rate":
+        numericValue1 = int.tryParse(valueController.text.trim());
+        if (numericValue1 == null) {
+          throw Exception("Please enter a valid number for respiratory rate");
+        }
+        
+        measurementData['value'] = '$numericValue1 breaths/min';
+        measurementData['respiratoryRate'] = numericValue1;
+        
+        isAbnormal = numericValue1 < 12 || numericValue1 > 20;
+        break;
     }
+
+    // 3. Save the measurement
+    final measurementResponse = await http.post(
+      Uri.parse('${getLocalHostUrl()}/clinical'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(measurementData),
+    );
+
+    if (measurementResponse.statusCode == 201) {
+      // 4. If abnormal, update patient condition
+      if (isAbnormal) {
+        final patientUpdateResponse = await http.put(
+          Uri.parse('${getLocalHostUrl()}/patients/${widget.patientId}'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'condition': 'Critical',
+            // Include all required fields for patient update
+            'name': widget.patientName, 
+            // Add other required fields here
+          }),
+        );
+
+        if (patientUpdateResponse.statusCode != 200) {
+          throw Exception('Failed to update patient condition');
+        }
+      }
+
+      // 5. Return to previous screen with refresh flag
+      Navigator.pop(context, {
+        'refresh': true,
+        'isAbnormal': isAbnormal,
+      });
+    } else {
+      throw Exception('Failed to save measurement: ${measurementResponse.body}');
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(e.toString())),
+    );
+  } finally {
+    setState(() => _isLoading = false);
   }
+}
 
   @override
   Widget build(BuildContext context) {

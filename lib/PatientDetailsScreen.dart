@@ -113,19 +113,24 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
   }
 
   // Navigate to AddMeasurementScreen
-  void _addMeasurement() async{
-    final result = await Navigator.push(
-      context, 
-      MaterialPageRoute(
-        builder: (context) => AddMeasurementPage(
-          patientId: widget.patientId
-        )
-      )
-    );
-    if (result == 'added') {
-      _fetchPatientClinicalData();
+  void _addMeasurement() async {
+  final result = await Navigator.push(
+    context, 
+    MaterialPageRoute(
+      builder: (context) => AddMeasurementPage(
+        patientId: widget.patientId,
+        patientName: widget.patientName, // Pass required fields
+      ),
+    ),
+  );
+
+  if (result != null && result['refresh'] == true) {
+    _fetchPatientClinicalData();
+    if (result['isAbnormal'] == true) {
+      _fetchPatientDetails(); // Refresh patient data if condition changed
     }
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -280,11 +285,12 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
 }
 
   // Create a patient's measurement history page
-  Widget _buildMeasurementHistoryTab() {
-    if (_isMeasurementLoading) {
-      return const Center(child: CircularProgressIndicator(),);
-    }
-    if (measurementHistory.isEmpty) {
+  // Create a patient's measurement history page
+Widget _buildMeasurementHistoryTab() {
+  if (_isMeasurementLoading) {
+    return const Center(child: CircularProgressIndicator());
+  }
+  if (measurementHistory.isEmpty) {
     return const Center(
       child: Text(
         "No measurements recorded",
@@ -292,32 +298,104 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
       ),
     );
   }
-    return ListView.builder(
-      padding: const EdgeInsets.all(20),
-      itemCount: measurementHistory.length,
-      itemBuilder: (context, index) {
-        final measurement = measurementHistory[index];
-        return Card(
-          elevation: 3,
-          margin: const EdgeInsets.only(bottom: 15),
-          child: ListTile(
-            leading: const Icon(Icons.monitor_heart, color: Colors.blue, size: 30,),
-            title: Text(
-              measurement["type"]!, 
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(measurement["value"] ?? '', 
-                  style: TextStyle(fontSize: 16),),
-                  const SizedBox(height: 3),
-                Text(measurement["dateTime"] ?? '', 
-                  style: TextStyle(fontSize: 14, color: Colors.grey),), 
-              ],
+  
+  return ListView.builder(
+    padding: const EdgeInsets.all(20),
+    itemCount: measurementHistory.length,
+    itemBuilder: (context, index) {
+      final measurement = measurementHistory[index];
+      final isCritical = _isCriticalMeasurement(measurement);
+      
+      return Card(
+        elevation: 3,
+        margin: const EdgeInsets.only(bottom: 15),
+        color: isCritical ? Colors.red[50] : null,
+        shape: isCritical 
+            ? RoundedRectangleBorder(
+                side: BorderSide(color: Colors.red, width: 2),
+                borderRadius: BorderRadius.circular(10),
+              )
+            : null,
+        child: ListTile(
+          leading: Icon(
+            Icons.monitor_heart,
+            color: isCritical ? Colors.red : Colors.blue,
+            size: 30,
+          ),
+          title: Text(
+            measurement["type"]!,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: isCritical ? Colors.red : null,
             ),
           ),
-        );
-      },
-    );
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                measurement["value"] ?? '',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: isCritical ? Colors.red : null,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                measurement["dateTime"] ?? '',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isCritical ? Colors.red[700] : Colors.grey,
+                ),
+              ),
+            ],
+          ),
+          trailing: isCritical
+              ? const Icon(Icons.warning, color: Colors.red)
+              : null,
+        ),
+      );
+    },
+  );
+}
+
+bool _isCriticalMeasurement(Map<String, String> measurement) {
+  try {
+    switch (measurement['type']) {
+      case 'Blood Pressure':
+        final parts = measurement['value']?.split('/');
+        if (parts != null && parts.length == 2) {
+          final systolic = int.tryParse(parts[0]);
+          final diastolicStr = parts[1].split(' ')[0];
+          final diastolic = int.tryParse(diastolicStr);
+          
+          return systolic != null && 
+                 diastolic != null && 
+                 (systolic > 180 || systolic < 90 || diastolic > 120 || diastolic < 60);
+        }
+        return false;
+      
+      case 'Heartbeat Rate':
+        final bpmStr = measurement['value']?.split(' ')[0];
+        final bpm = int.tryParse(bpmStr ?? '');
+        return bpm != null && (bpm < 60 || bpm > 100);
+      
+      case 'Blood Oxygen Level':
+        final spo2Str = measurement['value']?.split(' ')[0];
+        final spo2 = int.tryParse(spo2Str ?? '');
+        return spo2 != null && spo2 < 90;
+      
+      case 'Respiratory Rate':
+        final rateStr = measurement['value']?.split(' ')[0];
+        final rate = int.tryParse(rateStr ?? '');
+        return rate != null && (rate < 12 || rate > 20);
+      
+      default:
+        return false;
+    }
+  } catch (e) {
+    debugPrint('Error checking critical measurement: $e');
+    return false;
   }
+}
 }
