@@ -92,9 +92,6 @@ class _AddPatientPageState extends State<AddPatientPage> {
     );
 
     setState(() => _isLoading = false);
-    
-    print(response.statusCode);
-    print("Response Body: ${response.body}");
 
     if (response.statusCode == 201) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Patient added successfully")));
@@ -131,7 +128,12 @@ class _AddPatientPageState extends State<AddPatientPage> {
                 const Text("Personal Info", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 10),
                 _buildInputField("Name", _nameController),
-                _buildInputField("Age", _ageController, keyboardType: TextInputType.number),
+                _buildInputField("Age", _ageController, keyboardType: TextInputType.number, validator: (value) {
+                  if (value == null || value.trim().isEmpty) return 'Age is required';
+                  final age = int.tryParse(value.trim());
+                  if (age == null || age <= 0) return 'Please enter a valid age.';
+                  return null;
+                }),
                 
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
@@ -177,10 +179,25 @@ class _AddPatientPageState extends State<AddPatientPage> {
                 const SizedBox(height: 20),
                 const Text("Contact Info", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 10),
-                _buildInputField("Phone", _phoneController),
-                _buildInputField("Email", _emailController),
+                _buildInputField("Phone", _phoneController, keyboardType: TextInputType.phone, validator: (value) {
+                  final cleaned = value?.replaceAll(RegExp(r'[^0-9]'), '') ?? '';
+                  if (cleaned.isEmpty) return 'Phone is required';
+                  if (cleaned.length != 10) return 'Phone must be 10 digits';
+                  return null;
+                }),
+                _buildInputField("Email", _emailController, keyboardType: TextInputType.emailAddress, validator: (value) {
+                  if (value == null || value.trim().isEmpty) return 'Email is required';
+                  final emailRegex = RegExp(r'^[\w\-.]+@([\w-]+\.)+[\w-]{2,}$');
+                  if (!emailRegex.hasMatch(value.trim())) return 'Please enter a valid email';
+                  return null;
+                }),
                 _buildInputField("Address", _addressController),
-                _buildInputField("Emergency Contact", _emergencyController),
+                _buildInputField("Emergency Contact", _emergencyController, keyboardType: TextInputType.phone, validator: (value) {
+                  final cleaned = value?.replaceAll(RegExp(r'[^0-9]'), '') ?? '';
+                  if (cleaned.isEmpty) return 'Emergency Contact is required';
+                  if (cleaned.length != 10) return 'Emergency Contact must be 10 digits';
+                  return null;
+                }),
 
                 const SizedBox(height: 20),
                 const Text("Medical Details", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
@@ -207,19 +224,29 @@ class _AddPatientPageState extends State<AddPatientPage> {
     );
   }
 
-  Widget _buildInputField(String label, TextEditingController controller, {TextInputType keyboardType = TextInputType.text, bool isRequired = true}) {
+  Widget _buildInputField(
+    String label,
+    TextEditingController controller, {
+    TextInputType keyboardType = TextInputType.text,
+    bool isRequired = true,
+    String? Function(String?)? validator,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
         decoration: InputDecoration(
           labelText: label,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
           filled: true,
           fillColor: Colors.grey[200],
         ),
-        validator: isRequired ? (value) => value == null || value.trim().isEmpty ? '$label is required' : null : null,
+        validator: validator ??
+            (isRequired
+                ? (value) => value == null || value.trim().isEmpty ? '$label is required' : null
+                : null),
       ),
     );
   }
