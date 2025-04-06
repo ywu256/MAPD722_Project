@@ -129,8 +129,8 @@ class _PatientListState extends State<PatientListPage> {
     }
   }
 
-  void _viewPatientDetails(Map<String, dynamic> patient) {
-    Navigator.push(
+  void _viewPatientDetails(Map<String, dynamic> patient) async{
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => PatientDetailsScreen(
@@ -140,6 +140,9 @@ class _PatientListState extends State<PatientListPage> {
         ),
       ),
     );
+    if (result == 'updated') {
+      _fetchPatients();
+    }
   }
 
   @override

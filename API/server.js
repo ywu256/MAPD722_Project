@@ -207,6 +207,32 @@ app.put('/patients/:id', async (req, res) => {
   }
 });
 
+// Update just patient condition
+app.patch('/patients/:id', async (req, res) => {
+  const { id } = req.params;
+  const { condition } = req.body;
+
+  try {
+    const updatedPatient = await PatientModel.findByIdAndUpdate(
+      id,
+      { condition },
+      { new: true }
+    );
+
+    if (!updatedPatient) {
+      return res.status(404).json({ message: "Patient not found." });
+    }
+
+    res.status(200).json({ 
+      message: "Patient condition updated successfully.",
+      patient: updatedPatient 
+    });
+  } catch (error) {
+    console.error("Error updating patient condition:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+});
+
 // Delete a patient by ID
 app.delete('/patients/:id', async (req, res) => {
   const { id } = req.params;

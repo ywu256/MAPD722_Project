@@ -81,7 +81,6 @@ static const List<String> measurementTypes = <String>[
   setState(() => _isLoading = true);
 
   try {
-    // 1. Prepare measurement data
     final measurementDateTime = DateTime(
       selectedDate.year,
       selectedDate.month,
@@ -100,7 +99,7 @@ static const List<String> measurementTypes = <String>[
     int? numericValue1;
     int? numericValue2;
 
-    // 2. Parse values and check for abnormalities
+    // Parse values and check for abnormalities
     switch (dropdownvalue) {
       case "Blood Pressure":
         numericValue1 = int.tryParse(sysController.text.trim());
@@ -156,7 +155,7 @@ static const List<String> measurementTypes = <String>[
         break;
     }
 
-    // 3. Save the measurement
+    // Save the measurement
     final measurementResponse = await http.post(
       Uri.parse('${getLocalHostUrl()}/clinical'),
       headers: {'Content-Type': 'application/json'},
@@ -164,16 +163,14 @@ static const List<String> measurementTypes = <String>[
     );
 
     if (measurementResponse.statusCode == 201) {
-      // 4. If abnormal, update patient condition
+      // If abnormal, update patient condition
       if (isAbnormal) {
         final patientUpdateResponse = await http.put(
           Uri.parse('${getLocalHostUrl()}/patients/${widget.patientId}'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({
             'condition': 'Critical',
-            // Include all required fields for patient update
             'name': widget.patientName, 
-            // Add other required fields here
           }),
         );
 
@@ -181,8 +178,6 @@ static const List<String> measurementTypes = <String>[
           throw Exception('Failed to update patient condition');
         }
       }
-
-      // 5. Return to previous screen with refresh flag
       Navigator.pop(context, {
         'refresh': true,
         'isAbnormal': isAbnormal,
@@ -361,5 +356,4 @@ static const List<String> measurementTypes = <String>[
         ),
     );
   }
-  
 }

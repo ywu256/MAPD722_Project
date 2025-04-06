@@ -34,10 +34,13 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
   late final String apiUrl;
   bool _isLoading = true;
   bool _isMeasurementLoading = true;
+  late String _currentCondition;
+  bool _conditionChanged = false;
 
   @override
   void initState() {
     super.initState();
+    _currentCondition = widget.condition;
     apiUrl = '${getLocalHostUrl()}/patients/${widget.patientId}';
     _fetchPatientDetails();
     _fetchPatientClinicalData();
@@ -91,6 +94,11 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
           });
           setState(() {
             measurementHistory = measurements;
+            final newCondition = _determinePatientCondition();
+            if (newCondition != _currentCondition) {
+              _currentCondition = newCondition;
+              _updatePatientCondition(newCondition);
+            }
           });
         } else {
           _showMessage("Failed to load clinical data: ${response.statusCode}");
@@ -107,6 +115,63 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
       SnackBar(content: Text(message)),
     );
   }
+
+  // MEthod to determine the condition of patient based on measurement values 
+  String _determinePatientCondition() {
+    if (measurementHistory.isEmpty) return _currentCondition;
+
+    // Grouping measurements by type
+    final Map<String, Map<String, String>> latestMeasurement = {};
+    for (final measurement in measurementHistory) {
+      final type = measurement['type'] ?? 'Unknown';
+      if (!latestMeasurement.containsKey(type)) {
+        latestMeasurement[type] = measurement;
+      } else {
+        try {
+          final currentDate = DateTime.parse(latestMeasurement[type]!['dateTime']!);
+          final newDate = DateTime.parse(measurement['dateTime']!);
+          if (newDate.isAfter(currentDate)) {
+            latestMeasurement[type] = measurement;
+          }
+        } catch (error) {
+          print("Failed to group");
+        }
+      }
+    }
+    for (final measurement in latestMeasurement.values) {
+      if (_isCriticalMeasurement(measurement)) {
+        return 'Critical';
+      }
+    }
+    return 'Stable';
+  }
+
+  // Updating new condition of the patient
+  Future<void> _updatePatientCondition(String newCondition) async {
+  try {
+    final response = await http.patch(Uri.parse('${getLocalHostUrl()}/patients/${widget.patientId}'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: jsonEncode({
+        'condition': newCondition,
+      }),
+    );
+    if (response.statusCode == 200) {
+      setState(() {
+        _currentCondition = newCondition;
+      });
+      _showMessage('Patient condition updated to $newCondition');
+       _conditionChanged = true;
+    } else {
+      _showMessage('Failed to update patient condition');
+    }
+  } catch (error) {
+    _showMessage('Network error: ${error.toString()}');
+    rethrow;
+  }
+}
 
   // Navigate to EditPatientScreen
   void _editPatient() async {
@@ -137,16 +202,30 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
   );
 
   if (result != null && result['refresh'] == true) {
-    _fetchPatientClinicalData();
+    await _fetchPatientClinicalData();
     if (result['isAbnormal'] == true) {
       _fetchPatientDetails(); 
+      setState(() {
+        _conditionChanged = true;
+      });
     }
   }
 }
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, dynamic result) async {
+        if (!didPop) {
+          if (_conditionChanged) {
+          Navigator.pop(context, 'updated');
+        } else {
+        Navigator.pop(context);
+        }
+      }
+    },
+    child: DefaultTabController(
       length: 2,
       child: Scaffold(
         appBar: AppBar(
@@ -180,6 +259,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
         ],
       ),
       ),
+    )
     );
   }
 
@@ -219,17 +299,17 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: widget.condition == 'Critical'
+                    color: _currentCondition == 'Critical'
                         ? const Color.fromARGB(255, 233, 144, 137)
                         : const Color.fromARGB(255, 230, 230, 230),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    widget.condition,
+                    _currentCondition,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: widget.condition == 'Critical' ? Colors.white : Colors.black,
+                      color: _currentCondition == 'Critical' ? Colors.white : Colors.black,
                     ),
                   ),
                 ),
