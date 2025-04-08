@@ -8,10 +8,12 @@ class AddMeasurementPage extends StatefulWidget{
   final String patientName;
   final Map<String, dynamic>? patientDetails;
 
-const AddMeasurementPage({super.key, 
-  required this.patientId,
-  required this.patientName,
-  this.patientDetails});
+  const AddMeasurementPage({
+    super.key, 
+    required this.patientId,
+    required this.patientName,
+    this.patientDetails
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -29,8 +31,7 @@ String getLocalHostUrl() {
 }
 
 class _AddMeasurementState extends State<AddMeasurementPage> {
-
-static const List<String> measurementTypes = <String>[
+  static const List<String> measurementTypes = <String>[
     "Blood Pressure",
     "Heartbeat Rate",
     "Blood Oxygen Level",
@@ -52,6 +53,7 @@ static const List<String> measurementTypes = <String>[
       context: context,
       initialTime: selectedTime,
     );
+
     if (time != null) {
       setState(() {
         selectedTime = time;
@@ -78,121 +80,125 @@ static const List<String> measurementTypes = <String>[
   }
 
   Future<void> _submit() async {
-  setState(() => _isLoading = true);
+    setState(() => _isLoading = true);
 
-  try {
-    final measurementDateTime = DateTime(
-      selectedDate.year,
-      selectedDate.month,
-      selectedDate.day,
-      selectedTime.hour,
-      selectedTime.minute,
-    );
+    try {
+      final measurementDateTime = DateTime(
+        selectedDate.year,
+        selectedDate.month,
+        selectedDate.day,
+        selectedTime.hour,
+        selectedTime.minute,
+      );
 
-    Map<String, dynamic> measurementData = {
-      'patient_id': widget.patientId,
-      'type': dropdownvalue,
-      'dateTime': measurementDateTime.toIso8601String(),
-    };
+      Map<String, dynamic> measurementData = {
+        'patient_id': widget.patientId,
+        'type': dropdownvalue,
+        'dateTime': measurementDateTime.toIso8601String(),
+      };
 
-    bool isAbnormal = false;
-    int? numericValue1;
-    int? numericValue2;
+      bool isAbnormal = false;
+      int? numericValue1;
+      int? numericValue2;
 
-    // Parse values and check for abnormalities
-    switch (dropdownvalue) {
-      case "Blood Pressure":
-        numericValue1 = int.tryParse(sysController.text.trim());
-        numericValue2 = int.tryParse(diaController.text.trim());
-        if (numericValue1 == null || numericValue2 == null) {
-          throw Exception("Please enter valid numbers for blood pressure");
-        }
-        
-        measurementData['value'] = '$numericValue1/${numericValue2} mmHg';
-        measurementData['systolic'] = numericValue1;
-        measurementData['diastolic'] = numericValue2;
-        
-        isAbnormal = numericValue1 > 180 || 
-                    numericValue1 < 90 || 
-                    numericValue2 > 120 || 
-                    numericValue2 < 60;
-        break;
+      // Parse values and check for abnormalities
+      switch (dropdownvalue) {
+        case "Blood Pressure":
+          numericValue1 = int.tryParse(sysController.text.trim());
+          numericValue2 = int.tryParse(diaController.text.trim());
+          if (numericValue1 == null || numericValue2 == null) {
+            throw Exception("Please enter valid numbers for blood pressure");
+          }
+          
+          measurementData['value'] = '$numericValue1/$numericValue2 mmHg';
+          measurementData['systolic'] = numericValue1;
+          measurementData['diastolic'] = numericValue2;
+          
+          isAbnormal = numericValue1 > 180 || 
+                      numericValue1 < 90 || 
+                      numericValue2 > 120 || 
+                      numericValue2 < 60;
+          break;
 
-      case "Heartbeat Rate":
-        numericValue1 = int.tryParse(valueController.text.trim());
-        if (numericValue1 == null) {
-          throw Exception("Please enter a valid number for heartbeat rate");
-        }
-        
-        measurementData['value'] = '$numericValue1 bpm';
-        measurementData['bpm'] = numericValue1;
-        
-        isAbnormal = numericValue1 < 60 || numericValue1 > 100;
-        break;
+        case "Heartbeat Rate":
+          numericValue1 = int.tryParse(valueController.text.trim());
 
-      case "Blood Oxygen Level":
-        numericValue1 = int.tryParse(valueController.text.trim());
-        if (numericValue1 == null) {
-          throw Exception("Please enter a valid number for blood oxygen level");
-        }
-        
-        measurementData['value'] = '$numericValue1 %';
-        measurementData['spo2'] = numericValue1;
-        
-        isAbnormal = numericValue1 < 90;
-        break;
+          if (numericValue1 == null) {
+            throw Exception("Please enter a valid number for heartbeat rate");
+          }
+          
+          measurementData['value'] = '$numericValue1 bpm';
+          measurementData['bpm'] = numericValue1;
+          
+          isAbnormal = numericValue1 < 60 || numericValue1 > 100;
+          break;
 
-      case "Respiratory Rate":
-        numericValue1 = int.tryParse(valueController.text.trim());
-        if (numericValue1 == null) {
-          throw Exception("Please enter a valid number for respiratory rate");
-        }
-        
-        measurementData['value'] = '$numericValue1 breaths/min';
-        measurementData['respiratoryRate'] = numericValue1;
-        
-        isAbnormal = numericValue1 < 12 || numericValue1 > 20;
-        break;
-    }
+        case "Blood Oxygen Level":
+          numericValue1 = int.tryParse(valueController.text.trim());
 
-    // Save the measurement
-    final measurementResponse = await http.post(
-      Uri.parse('${getLocalHostUrl()}/clinical'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(measurementData),
-    );
+          if (numericValue1 == null) {
+            throw Exception("Please enter a valid number for blood oxygen level");
+          }
+          
+          measurementData['value'] = '$numericValue1 %';
+          measurementData['spo2'] = numericValue1;
+          
+          isAbnormal = numericValue1 < 90;
+          break;
 
-    if (measurementResponse.statusCode == 201) {
-      // If abnormal, update patient condition
-      if (isAbnormal) {
-        final patientUpdateResponse = await http.put(
-          Uri.parse('${getLocalHostUrl()}/patients/${widget.patientId}'),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            'condition': 'Critical',
-            'name': widget.patientName, 
-          }),
-        );
+        case "Respiratory Rate":
+          numericValue1 = int.tryParse(valueController.text.trim());
 
-        if (patientUpdateResponse.statusCode != 200) {
-          throw Exception('Failed to update patient condition');
-        }
+          if (numericValue1 == null) {
+            throw Exception("Please enter a valid number for respiratory rate");
+          }
+          
+          measurementData['value'] = '$numericValue1 breaths/min';
+          measurementData['respiratoryRate'] = numericValue1;
+          
+          isAbnormal = numericValue1 < 12 || numericValue1 > 20;
+          break;
       }
-      Navigator.pop(context, {
-        'refresh': true,
-        'isAbnormal': isAbnormal,
-      });
-    } else {
-      throw Exception('Failed to save measurement: ${measurementResponse.body}');
+
+      // Save the measurement
+      final measurementResponse = await http.post(
+        Uri.parse('${getLocalHostUrl()}/clinical'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(measurementData),
+      );
+
+      if (measurementResponse.statusCode == 201) {
+        // If abnormal, update patient condition
+        if (isAbnormal) {
+          final patientUpdateResponse = await http.put(
+            Uri.parse('${getLocalHostUrl()}/patients/${widget.patientId}'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'condition': 'Critical',
+              'name': widget.patientName, 
+            }),
+          );
+
+          if (patientUpdateResponse.statusCode != 200) {
+            throw Exception('Failed to update patient condition');
+          }
+        }
+
+        Navigator.pop(context, {
+          'refresh': true,
+          'isAbnormal': isAbnormal,
+        });
+      } else {
+        throw Exception('Failed to save measurement: ${measurementResponse.body}');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    } finally {
+      setState(() => _isLoading = false);
     }
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(e.toString())),
-    );
-  } finally {
-    setState(() => _isLoading = false);
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -226,115 +232,114 @@ static const List<String> measurementTypes = <String>[
             const SizedBox(height: 30,),
 
             if(dropdownvalue == "Blood Pressure")
-            Row(children: [
-              Expanded(child: 
-              TextField(
-                controller: sysController,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10)
+              Row(children: [
+                Expanded(child: 
+                TextField(
+                  controller: sysController,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10)
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey[200],
+                    hintText: 'Systolic'
                   ),
-                  filled: true,
-                  fillColor: Colors.grey[200],
-                  hintText: 'Systolic'
-                ),
-              )),
-              const SizedBox(width: 10,),
-              const Text('/', style: TextStyle(fontSize: 20)),
-              const SizedBox(width: 10,),
+                )),
+                const SizedBox(width: 10,),
+                const Text('/', style: TextStyle(fontSize: 20)),
+                const SizedBox(width: 10,),
 
-              Expanded(child:
-              TextField(
-                controller: diaController,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10)
+                Expanded(child:
+                TextField(
+                  controller: diaController,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10)
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey[200],
+                    hintText: 'Diastolic'
                   ),
-                  filled: true,
-                  fillColor: Colors.grey[200],
-                  hintText: 'Diastolic'
-                ),
-              )),
-              const SizedBox(width: 10,),
-              const Text('mmHg', style: TextStyle(fontSize: 20),)
-            ],)
+                )),
+                const SizedBox(width: 10,),
+                const Text('mmHg', style: TextStyle(fontSize: 20),)
+              ],)
             else
-            Row(children: [
-              Expanded(child: 
-              TextField(
-              controller: valueController,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10)
+              Row(children: [
+                Expanded(child: 
+                TextField(
+                controller: valueController,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10)
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey[200],
+                  hintText: dropdownvalue == "Heartbeat Rate"
+                  ? "Enter Heartbeat Value"
+                  : dropdownvalue == "Blood Oxygen Level"
+                  ? "Enter blood oxygen value"
+                  : "Enter Respiratory Rate"
                 ),
-                filled: true,
-                fillColor: Colors.grey[200],
-                hintText: dropdownvalue == "Heartbeat Rate"
-                ? "Enter Heartbeat Value"
+              ),
+                ),
+                const SizedBox(width: 10,),
+                Text(
+                  dropdownvalue == "Heartbeat Rate"
+                ? "bpm"
                 : dropdownvalue == "Blood Oxygen Level"
-                ? "Enter blood oxygen value"
-                : "Enter Respiratory Rate"
-              ),
-            ),
-              ),
-              const SizedBox(width: 10,),
-              Text(
-                dropdownvalue == "Heartbeat Rate"
-              ? "bpm"
-              : dropdownvalue == "Blood Oxygen Level"
-              ? "%"
-              : "breaths/min", style: TextStyle(fontSize: 20),),
-            ],),
+                ? "%"
+                : "breaths/min", style: TextStyle(fontSize: 20),),
+              ],),
             
-
             const SizedBox(height: 30,),
 
             const Text('Select Date & Time:', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),),
-             const SizedBox(height: 30),
+            const SizedBox(height: 30),
 
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-            IconButton(
-              onPressed: _selectTime,
-              icon: Icon(Icons.access_time_outlined, size: 30,),
-            ),
-            GestureDetector(
-              onTap: _selectTime,
-              child: 
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(5),
+                IconButton(
+                  onPressed: _selectTime,
+                  icon: Icon(Icons.access_time_outlined, size: 30,),
                 ),
-                child: Text(
-                  selectedTime.format(context),
-                  style: const TextStyle(fontSize: 20)
+                GestureDetector(
+                  onTap: _selectTime,
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    child: Text(
+                      selectedTime.format(context),
+                      style: const TextStyle(fontSize: 20)
+                    ),
+                  ),
                 ),
-              ),
-            ),
             
-            SizedBox(width: 20),
-              IconButton(
-                onPressed: _selectDate, 
-                icon: Icon(Icons.calendar_month, size: 30,),),
-              GestureDetector(
-                onTap: _selectDate,
-                child: 
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(5)
-                  ),
-                  child: Text(
-                    '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
-                    style: const TextStyle(fontSize: 20)
+                SizedBox(width: 20),
+                IconButton(
+                  onPressed: _selectDate, 
+                  icon: Icon(Icons.calendar_month, size: 30,)
+                ),
+                GestureDetector(
+                  onTap: _selectDate,
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(5)
+                    ),
+                    child: Text(
+                      '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
+                      style: const TextStyle(fontSize: 20)
+                    ),
                   ),
                 ),
-              ),
-            ],),
+              ],
+            ),
 
             const SizedBox(height: 30),
 
