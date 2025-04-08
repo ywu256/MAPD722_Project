@@ -11,7 +11,12 @@ class PatientDetailsScreen extends StatefulWidget {
   final String patientId;
   final String condition;
 
-  const PatientDetailsScreen({super.key, required this.patientName, required this.patientId,required this.condition});
+  const PatientDetailsScreen({
+    super.key,
+    required this.patientName,
+    required this.patientId,
+    required this.condition
+  });
 
   @override
   _PatientDetailsScreenState createState() => _PatientDetailsScreenState();
@@ -27,7 +32,7 @@ String getLocalHostUrl() {
 }
 
 class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
-   int _selectedIndex = 0;
+  int _selectedIndex = 0;
   List<Map<String, String>> measurementHistory = [];
 
   Map<String, dynamic>? patientDetails;
@@ -49,7 +54,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
   Future<void> _fetchPatientDetails() async {
     try {
       final response = await http.get(Uri.parse(apiUrl));
-      if(response.statusCode == 200) {
+      if (response.statusCode == 200) {
         final Map<String, dynamic> patientData = jsonDecode(response.body);
         setState(() {
           patientDetails = patientData['patient'];
@@ -70,45 +75,50 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
   Future<void> _fetchPatientClinicalData() async {
     setState(() => _isMeasurementLoading = true);
     try {
-      final response = await http.get(Uri.parse('${getLocalHostUrl()}/clinical/${widget.patientId}'));
+      final response = await http
+          .get(Uri.parse('${getLocalHostUrl()}/clinical/${widget.patientId}'));
 
-      if(response.statusCode == 200) {
+      if (response.statusCode == 200) {
         final List<dynamic> clinicalData = jsonDecode(response.body);
+
         // Coverting date to sort
         List<Map<String, String>> measurements = clinicalData.map((measurement) {
           return {
-              'type': (measurement['type'] ?? '').toString(),
-              'value': (measurement['value']?? '').toString(),
-              'dateTime': (measurement['dateTime']?? '').toString(),
-            };
-          }).toList();
-          // Sort in descending order
-          measurements.sort((a,b) {
-            try {
-              final DateA = DateTime.parse(a['dateTime']!);
-              final DateB =  DateTime.parse(b['dateTime']!);
-              return DateB.compareTo(DateA);
-            } catch (error) {
-              return 0;
-            }
-          });
-          setState(() {
-            measurementHistory = measurements;
-            final newCondition = _determinePatientCondition();
-            if (newCondition != _currentCondition) {
-              _currentCondition = newCondition;
-              _updatePatientCondition(newCondition);
-            }
-          });
-        } else {
-          _showMessage("Failed to load clinical data: ${response.statusCode}");
-        }
-      } catch (error) {
-        _showMessage("Network error: ${error.toString()}");
-      } finally {
-        setState(() => _isMeasurementLoading = false);
+            'type': (measurement['type'] ?? '').toString(),
+            'value': (measurement['value'] ?? '').toString(),
+            'dateTime': (measurement['dateTime'] ?? '').toString(),
+          };
+        }).toList();
+
+        // Sort in descending order
+        measurements.sort((a, b) {
+          try {
+            final dateA = DateTime.parse(a['dateTime']!);
+            final dateB = DateTime.parse(b['dateTime']!);
+            return dateB.compareTo(dateA);
+          } catch (error) {
+            return 0;
+          }
+        });
+
+        setState(() {
+          measurementHistory = measurements;
+          final newCondition = _determinePatientCondition();
+
+          if (newCondition != _currentCondition) {
+            _currentCondition = newCondition;
+            _updatePatientCondition(newCondition);
+          }
+        });
+      } else {
+        _showMessage("Failed to load clinical data: ${response.statusCode}");
       }
+    } catch (error) {
+      _showMessage("Network error: ${error.toString()}");
+    } finally {
+      setState(() => _isMeasurementLoading = false);
     }
+  }
 
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -116,7 +126,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
     );
   }
 
-  // MEthod to determine the condition of patient based on measurement values 
+  // Method to determine the condition of patient based on measurement values
   String _determinePatientCondition() {
     if (measurementHistory.isEmpty) return _currentCondition;
 
@@ -124,12 +134,14 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
     final Map<String, Map<String, String>> latestMeasurement = {};
     for (final measurement in measurementHistory) {
       final type = measurement['type'] ?? 'Unknown';
+
       if (!latestMeasurement.containsKey(type)) {
         latestMeasurement[type] = measurement;
       } else {
         try {
           final currentDate = DateTime.parse(latestMeasurement[type]!['dateTime']!);
           final newDate = DateTime.parse(measurement['dateTime']!);
+
           if (newDate.isAfter(currentDate)) {
             latestMeasurement[type] = measurement;
           }
@@ -138,6 +150,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
         }
       }
     }
+
     for (final measurement in latestMeasurement.values) {
       if (_isCriticalMeasurement(measurement)) {
         return 'Critical';
@@ -148,30 +161,32 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
 
   // Updating new condition of the patient
   Future<void> _updatePatientCondition(String newCondition) async {
-  try {
-    final response = await http.patch(Uri.parse('${getLocalHostUrl()}/patients/${widget.patientId}'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: jsonEncode({
-        'condition': newCondition,
-      }),
-    );
-    if (response.statusCode == 200) {
-      setState(() {
-        _currentCondition = newCondition;
-      });
-      _showMessage('Patient condition updated to $newCondition');
-       _conditionChanged = true;
-    } else {
-      _showMessage('Failed to update patient condition');
+    try {
+      final response = await http.patch(
+        Uri.parse('${getLocalHostUrl()}/patients/${widget.patientId}'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'condition': newCondition,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _currentCondition = newCondition;
+        });
+        _showMessage('Patient condition updated to $newCondition');
+        _conditionChanged = true;
+      } else {
+        _showMessage('Failed to update patient condition');
+      }
+    } catch (error) {
+      _showMessage('Network error: ${error.toString()}');
+      rethrow;
     }
-  } catch (error) {
-    _showMessage('Network error: ${error.toString()}');
-    rethrow;
   }
-}
 
   // Navigate to EditPatientScreen
   void _editPatient() async {
@@ -191,76 +206,78 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
 
   // Navigate to AddMeasurementScreen
   void _addMeasurement() async {
-  final result = await Navigator.push(
-    context, 
-    MaterialPageRoute(
-      builder: (context) => AddMeasurementPage(
-        patientId: widget.patientId,
-        patientName: widget.patientName,
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddMeasurementPage(
+          patientId: widget.patientId,
+          patientName: widget.patientName,
+        ),
       ),
-    ),
-  );
+    );
 
-  if (result != null && result['refresh'] == true) {
-    await _fetchPatientClinicalData();
-    if (result['isAbnormal'] == true) {
-      _fetchPatientDetails(); 
-      setState(() {
-        _conditionChanged = true;
-      });
+    if (result != null && result['refresh'] == true) {
+      await _fetchPatientClinicalData();
+      if (result['isAbnormal'] == true) {
+        _fetchPatientDetails();
+        setState(() {
+          _conditionChanged = true;
+        });
+      }
     }
   }
-}
 
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (bool didPop, dynamic result) async {
-        if (!didPop) {
-          if (_conditionChanged) {
-          Navigator.pop(context, 'updated');
-        } else {
-        Navigator.pop(context);
-        }
-      }
-    },
-    child: DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          actions: [
-            /*----- Edit Patient -----*/
-            IconButton(
-              icon: const Icon(Icons.edit, color: Colors.black),
-              onPressed: _editPatient,
-            ),
-          ],
-        ),
-        body: _isLoading
-        ? const Center(child: CircularProgressIndicator())
-        : _selectedIndex == 0 ? _buildDetailsTab() : _buildMeasurementHistoryTab(),
-  
-        floatingActionButton: FloatingActionButton(
-          onPressed: _addMeasurement,
-          backgroundColor: Colors.blue,
-          child: const Icon(Icons.add, color: Colors.white),
-        ),
-        bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
+        canPop: false,
+        onPopInvokedWithResult: (bool didPop, dynamic result) async {
+          if (!didPop) {
+            if (_conditionChanged) {
+              Navigator.pop(context, 'updated');
+            } else {
+              Navigator.pop(context);
+            }
+          }
         },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.info), label: "Details"),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: "History"),
-        ],
-      ),
-      ),
-    )
-    );
+        child: DefaultTabController(
+          length: 2,
+          child: Scaffold(
+            appBar: AppBar(
+              actions: [
+                /*----- Edit Patient -----*/
+                IconButton(
+                  icon: const Icon(Icons.edit, color: Colors.black),
+                  onPressed: _editPatient,
+                ),
+              ],
+            ),
+            body: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _selectedIndex == 0
+                    ? _buildDetailsTab()
+                    : _buildMeasurementHistoryTab(),
+            floatingActionButton: FloatingActionButton(
+              onPressed: _addMeasurement,
+              backgroundColor: Colors.blue,
+              child: const Icon(Icons.add, color: Colors.white),
+            ),
+            bottomNavigationBar: BottomNavigationBar(
+              currentIndex: _selectedIndex,
+              onTap: (index) {
+                setState(() {
+                  _selectedIndex = index;
+                });
+              },
+              items: const [
+                BottomNavigationBarItem(
+                    icon: Icon(Icons.info), label: "Details"),
+                BottomNavigationBarItem(
+                    icon: Icon(Icons.history), label: "History"),
+              ],
+            ),
+          ),
+        ));
   }
 
   // Create a patient's details page
@@ -284,7 +301,6 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                 ),
               ),
             ),
-
           const SizedBox(height: 20),
 
           /* --- Patient's Name and Condition --- */
@@ -293,7 +309,10 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
               children: [
                 Text(
                   widget.patientName,
-                  style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 26, 
+                    fontWeight: FontWeight.bold
+                  ),
                 ),
                 const SizedBox(height: 10),
                 Container(
@@ -309,26 +328,29 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: _currentCondition == 'Critical' ? Colors.white : Colors.black,
+                      color: _currentCondition == 'Critical'
+                          ? Colors.white
+                          : Colors.black,
                     ),
                   ),
                 ),
               ],
             ),
           ),
-
           const SizedBox(height: 30),
 
           if (patientDetails != null) ...[
             /* --- Patient's Personal Info --- */
-            const Text("Personal Info", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            const Text(
+              "Personal Info",
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)
+            ),
             const SizedBox(height: 10),
             _buildInfoRow("Patient ID", patientDetails?['patientId']),
             _buildInfoRow("Age", patientDetails?['age']?.toString()),
             _buildInfoRow("Gender", patientDetails?['gender']),
             _buildInfoRow("Blood Type", patientDetails?['bloodType']),
             _buildInfoRow("Admission Date", _formatDate(patientDetails?['admissionDate'])),
-
             const SizedBox(height: 20),
 
             /* --- Patient's Contact Info --- */
@@ -338,7 +360,6 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
             _buildInfoRow("Email", patientDetails?['email']),
             _buildInfoRow("Address", patientDetails?['address']),
             _buildInfoRow("Emergency Contact", patientDetails?['emergencyContactPhone']),
-
             const SizedBox(height: 20),
 
             /* --- Patient's Medical Details --- */
@@ -358,135 +379,160 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 140, child: Text("$label:", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500))),
+          SizedBox(
+            width: 140,
+            child: Text(
+              "$label:",
+              style: const TextStyle(
+                fontSize: 16, 
+                fontWeight: FontWeight.w500
+              )
+            )
+          ),
           Expanded(child: Text(value ?? "N/A", style: const TextStyle(fontSize: 16))),
         ],
       ),
     );
   }
 
-
   String _formatDate(String isoDate) {
-  try {
-    final DateTime dateTime = DateTime.parse(isoDate);
-    final DateFormat formatter = DateFormat('yyyy-MM-dd'); 
-    return formatter.format(dateTime);
-  } catch (e) {
-    return 'Invalid Date';
+    try {
+      final DateTime dateTime = DateTime.parse(isoDate);
+      final DateFormat formatter = DateFormat('yyyy-MM-dd');
+      return formatter.format(dateTime);
+    } catch (e) {
+      return 'Invalid Date';
+    }
   }
-}
+
+  String _formatDateTime(String rawDate) {
+    try {
+      final utcTime = DateTime.parse(rawDate);
+      final localTime = utcTime.toLocal();
+      final formatter = DateFormat('yyyy-MM-dd HH:mm');
+
+      return formatter.format(localTime);
+    } catch (e) {
+      return 'Invalid Date';
+    }
+  }
 
   // Create a patient's measurement history page
-Widget _buildMeasurementHistoryTab() {
-  if (_isMeasurementLoading) {
-    return const Center(child: CircularProgressIndicator());
-  }
-  if (measurementHistory.isEmpty) {
-    return const Center(
-      child: Text(
-        "No measurements recorded",
-        style: TextStyle(fontSize: 20, color: Colors.grey),
-      ),
-    );
-  }
-  
-  return ListView.builder(
-    padding: const EdgeInsets.all(20),
-    itemCount: measurementHistory.length,
-    itemBuilder: (context, index) {
-      final measurement = measurementHistory[index];
-      final isCritical = _isCriticalMeasurement(measurement);
-      
-      return Card(
-        elevation: 3,
-        margin: const EdgeInsets.only(bottom: 15),
-        color: isCritical ? Colors.red[50] : null,
-        shape: isCritical 
-            ? RoundedRectangleBorder(
-                side: BorderSide(color: Colors.red, width: 2),
-                borderRadius: BorderRadius.circular(10),
-              )
-            : null,
-        child: ListTile(
-          leading: Icon(
-            Icons.monitor_heart,
-            color: isCritical ? Colors.red : Colors.blue,
-            size: 30,
-          ),
-          title: Text(
-            measurement["type"]!,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: isCritical ? Colors.red : null,
-            ),
-          ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                measurement["value"] ?? '',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: isCritical ? Colors.red : null,
-                ),
-              ),
-              const SizedBox(height: 3),
-              Text(
-                measurement["dateTime"] ?? '',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: isCritical ? Colors.red[700] : Colors.grey,
-                ),
-              ),
-            ],
-          ),
-          trailing: isCritical
-              ? const Icon(Icons.warning, color: Colors.red)
-              : null,
+  Widget _buildMeasurementHistoryTab() {
+    if (_isMeasurementLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (measurementHistory.isEmpty) {
+      return const Center(
+        child: Text(
+          "No measurements recorded",
+          style: TextStyle(fontSize: 20, color: Colors.grey),
         ),
       );
-    },
-  );
-}
-
-bool _isCriticalMeasurement(Map<String, String> measurement) {
-  try {
-    switch (measurement['type']) {
-      case 'Blood Pressure':
-        final parts = measurement['value']?.split('/');
-        if (parts != null && parts.length == 2) {
-          final systolic = int.tryParse(parts[0]);
-          final diastolicStr = parts[1].split(' ')[0];
-          final diastolic = int.tryParse(diastolicStr);
-          
-          return systolic != null && 
-                 diastolic != null && 
-                 (systolic > 180 || systolic < 90 || diastolic > 120 || diastolic < 60);
-        }
-        return false;
-      
-      case 'Heartbeat Rate':
-        final bpmStr = measurement['value']?.split(' ')[0];
-        final bpm = int.tryParse(bpmStr ?? '');
-        return bpm != null && (bpm < 60 || bpm > 100);
-      
-      case 'Blood Oxygen Level':
-        final spo2Str = measurement['value']?.split(' ')[0];
-        final spo2 = int.tryParse(spo2Str ?? '');
-        return spo2 != null && spo2 < 90;
-      
-      case 'Respiratory Rate':
-        final rateStr = measurement['value']?.split(' ')[0];
-        final rate = int.tryParse(rateStr ?? '');
-        return rate != null && (rate < 12 || rate > 20);
-      
-      default:
-        return false;
     }
-  } catch (error) {
-    debugPrint('Error checking critical measurement: $error');
-    return false;
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(20),
+      itemCount: measurementHistory.length,
+      itemBuilder: (context, index) {
+        final measurement = measurementHistory[index];
+        final isCritical = _isCriticalMeasurement(measurement);
+
+        return Card(
+          elevation: 3,
+          margin: const EdgeInsets.only(bottom: 15),
+          color: isCritical ? Colors.red[50] : null,
+          shape: isCritical
+              ? RoundedRectangleBorder(
+                  side: BorderSide(color: Colors.red, width: 2),
+                  borderRadius: BorderRadius.circular(10),
+                )
+              : null,
+          child: ListTile(
+            leading: Icon(
+              Icons.monitor_heart,
+              color: isCritical ? Colors.red : Colors.blue,
+              size: 30,
+            ),
+            title: Text(
+              measurement["type"]!,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: isCritical ? Colors.red : null,
+              ),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  measurement["value"] ?? '',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: isCritical ? Colors.red : null,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  _formatDateTime(measurement["dateTime"] ?? ''),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isCritical ? Colors.red[700] : Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+            trailing: isCritical
+                ? const Icon(Icons.warning, color: Colors.red)
+                : null,
+          ),
+        );
+      },
+    );
   }
-}
+
+  bool _isCriticalMeasurement(Map<String, String> measurement) {
+    try {
+      switch (measurement['type']) {
+        case 'Blood Pressure':
+          final parts = measurement['value']?.split('/');
+
+          if (parts != null && parts.length == 2) {
+            final systolic = int.tryParse(parts[0]);
+            final diastolicStr = parts[1].split(' ')[0];
+            final diastolic = int.tryParse(diastolicStr);
+
+            return systolic != null &&
+                diastolic != null &&
+                (systolic > 180 ||
+                    systolic < 90 ||
+                    diastolic > 120 ||
+                    diastolic < 60);
+          }
+          return false;
+
+        case 'Heartbeat Rate':
+          final bpmStr = measurement['value']?.split(' ')[0];
+          final bpm = int.tryParse(bpmStr ?? '');
+          return bpm != null && (bpm < 60 || bpm > 100);
+
+        case 'Blood Oxygen Level':
+          final spo2Str = measurement['value']?.split(' ')[0];
+          final spo2 = int.tryParse(spo2Str ?? '');
+          return spo2 != null && spo2 < 90;
+
+        case 'Respiratory Rate':
+          final rateStr = measurement['value']?.split(' ')[0];
+          final rate = int.tryParse(rateStr ?? '');
+          return rate != null && (rate < 12 || rate > 20);
+
+        default:
+          return false;
+      }
+    } catch (error) {
+      debugPrint('Error checking critical measurement: $error');
+      return false;
+    }
+  }
 }
