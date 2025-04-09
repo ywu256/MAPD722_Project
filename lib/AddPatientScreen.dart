@@ -104,123 +104,136 @@ class _AddPatientPageState extends State<AddPatientPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Patient')),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: GestureDetector(
-                    onTap: _pickImage,
-                    child: CircleAvatar(
-                      radius: 60,
-                      backgroundImage: _selectedImage != null ? FileImage(_selectedImage!) : null,
-                      child: _selectedImage == null ? const Icon(Icons.camera_alt, size: 40) : null,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                const Text("Personal Info", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 10),
-                _buildInputField("Name", _nameController),
-                _buildInputField("Age", _ageController, keyboardType: TextInputType.number, validator: (value) {
-                  if (value == null || value.trim().isEmpty) return 'Age is required';
-                  final age = int.tryParse(value.trim());
-                  if (age == null || age <= 0) return 'Please enter a valid age.';
-                  return null;
-                }),
-                
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedGender,
-                    decoration: InputDecoration(
-                      labelText: "Gender",
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                      filled: true,
-                      fillColor: Colors.grey[200],
-                    ),
-                    items: const [
-                      DropdownMenuItem(value: "male", child: Text("Male")),
-                      DropdownMenuItem(value: "female", child: Text("Female")),
-                      DropdownMenuItem(value: "other", child: Text("Other")),
-                    ],
-                    onChanged: (value) => setState(() => _selectedGender = value),
-                    validator: (value) => value == null || value.isEmpty ? 'Gender is required' : null,
-                  ),
-                ),
-
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedBloodType,
-                    decoration: InputDecoration(
-                      labelText: "Blood Type",
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                      filled: true,
-                      fillColor: Colors.grey[200],
-                    ),
-                    items: ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]
-                        .map((type) => DropdownMenuItem(
-                              value: type,
-                              child: Text(type),
-                            ))
-                        .toList(),
-                    onChanged: (value) => setState(() => _selectedBloodType = value),
-                    validator: (value) => value == null || value.isEmpty ? 'Blood Type is required' : null,
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-                const Text("Contact Info", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 10),
-                _buildInputField("Phone", _phoneController, keyboardType: TextInputType.phone, validator: (value) {
-                  final cleaned = value?.replaceAll(RegExp(r'[^0-9]'), '') ?? '';
-                  if (cleaned.isEmpty) return 'Phone is required';
-                  if (cleaned.length != 10) return 'Phone must be 10 digits';
-                  return null;
-                }),
-                _buildInputField("Email", _emailController, keyboardType: TextInputType.emailAddress, validator: (value) {
-                  if (value == null || value.trim().isEmpty) return 'Email is required';
-                  final emailRegex = RegExp(r'^[\w\-.]+@([\w-]+\.)+[\w-]{2,}$');
-                  if (!emailRegex.hasMatch(value.trim())) return 'Please enter a valid email';
-                  return null;
-                }),
-                _buildInputField("Address", _addressController),
-                _buildInputField("Emergency Contact", _emergencyController, keyboardType: TextInputType.phone, validator: (value) {
-                  final cleaned = value?.replaceAll(RegExp(r'[^0-9]'), '') ?? '';
-                  if (cleaned.isEmpty) return 'Emergency Contact is required';
-                  if (cleaned.length != 10) return 'Emergency Contact must be 10 digits';
-                  return null;
-                }),
-
-                const SizedBox(height: 20),
-                const Text("Medical Details", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 10),
-                _buildInputField("Medical History", _medicalController, isRequired: false),
-                _buildInputField("Allergies", _allergyController, isRequired: false),
-                
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _submit,
-                    child: _isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text("Submit", style: TextStyle(fontSize: 18)),
-                  ),
-                ),
-              ],
+      appBar: AppBar(
+        title: const Text('Add Patient'),
+        elevation: 0,
+      ),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'assets/background.jpg',
+              fit: BoxFit.cover,
             ),
           ),
-        ),
-      ),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: GestureDetector(
+                        onTap: _pickImage,
+                        child: CircleAvatar(
+                          radius: 60,
+                          backgroundImage: _selectedImage != null ? FileImage(_selectedImage!) : null,
+                          child: _selectedImage == null ? const Icon(Icons.camera_alt, size: 40) : null,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    const Text("Personal Info", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 10),
+                    _buildInputField("Name", _nameController),
+                    _buildInputField("Age", _ageController, keyboardType: TextInputType.number, validator: (value) {
+                      if (value == null || value.trim().isEmpty) return 'Age is required';
+                      final age = int.tryParse(value.trim());
+                      if (age == null || age <= 0) return 'Please enter a valid age.';
+                      return null;
+                    }),
+                    
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedGender,
+                        decoration: InputDecoration(
+                          labelText: "Gender",
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                          filled: true,
+                          fillColor: Colors.grey[200],
+                        ),
+                        items: const [
+                          DropdownMenuItem(value: "male", child: Text("Male")),
+                          DropdownMenuItem(value: "female", child: Text("Female")),
+                          DropdownMenuItem(value: "other", child: Text("Other")),
+                        ],
+                        onChanged: (value) => setState(() => _selectedGender = value),
+                        validator: (value) => value == null || value.isEmpty ? 'Gender is required' : null,
+                      ),
+                    ),
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedBloodType,
+                        decoration: InputDecoration(
+                          labelText: "Blood Type",
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                          filled: true,
+                          fillColor: Colors.grey[200],
+                        ),
+                        items: ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]
+                            .map((type) => DropdownMenuItem(
+                                  value: type,
+                                  child: Text(type),
+                                ))
+                            .toList(),
+                        onChanged: (value) => setState(() => _selectedBloodType = value),
+                        validator: (value) => value == null || value.isEmpty ? 'Blood Type is required' : null,
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+                    const Text("Contact Info", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 10),
+                    _buildInputField("Phone", _phoneController, keyboardType: TextInputType.phone, validator: (value) {
+                      final cleaned = value?.replaceAll(RegExp(r'[^0-9]'), '') ?? '';
+                      if (cleaned.isEmpty) return 'Phone is required';
+                      if (cleaned.length != 10) return 'Phone must be 10 digits';
+                      return null;
+                    }),
+                    _buildInputField("Email", _emailController, keyboardType: TextInputType.emailAddress, validator: (value) {
+                      if (value == null || value.trim().isEmpty) return 'Email is required';
+                      final emailRegex = RegExp(r'^[\w\-.]+@([\w-]+\.)+[\w-]{2,}$');
+                      if (!emailRegex.hasMatch(value.trim())) return 'Please enter a valid email';
+                      return null;
+                    }),
+                    _buildInputField("Address", _addressController),
+                    _buildInputField("Emergency Contact", _emergencyController, keyboardType: TextInputType.phone, validator: (value) {
+                      final cleaned = value?.replaceAll(RegExp(r'[^0-9]'), '') ?? '';
+                      if (cleaned.isEmpty) return 'Emergency Contact is required';
+                      if (cleaned.length != 10) return 'Emergency Contact must be 10 digits';
+                      return null;
+                    }),
+
+                    const SizedBox(height: 20),
+                    const Text("Medical Details", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 10),
+                    _buildInputField("Medical History", _medicalController, isRequired: false),
+                    _buildInputField("Allergies", _allergyController, isRequired: false),
+                    
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _submit,
+                        child: _isLoading
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : const Text("Submit", style: TextStyle(fontSize: 18)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ]
+      )
     );
   }
 

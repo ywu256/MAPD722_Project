@@ -244,6 +244,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
           length: 2,
           child: Scaffold(
             appBar: AppBar(
+              elevation: 0,
               actions: [
                 /*----- Edit Patient -----*/
                 IconButton(
@@ -252,11 +253,21 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                 ),
               ],
             ),
-            body: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _selectedIndex == 0
-                    ? _buildDetailsTab()
-                    : _buildMeasurementHistoryTab(),
+            body: Stack(
+              children: [
+                Positioned.fill(
+                  child: Image.asset(
+                    'assets/background.jpg',
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _selectedIndex == 0
+                      ? _buildDetailsTab()
+                      : _buildMeasurementHistoryTab(),
+              ]
+            ),
             floatingActionButton: FloatingActionButton(
               onPressed: _addMeasurement,
               backgroundColor: Colors.blue,

@@ -203,162 +203,175 @@ class _AddMeasurementState extends State<AddMeasurementPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Add Measurement"),),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Select Measurement Type:', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),),
-            const SizedBox(height: 30,),
-
-            // Dropdown for selecting measurement type
-            SizedBox(
-              width: double.infinity,
-              child: DropdownButtonFormField<String>(
-              value: dropdownvalue, 
-              isExpanded: true,
-              onChanged:(String? newValue) {
-                setState(() {
-                  dropdownvalue = newValue!;
-                });
-              },
-              items: measurementTypes.map<DropdownMenuItem<String>>((String value) {
-                return DropdownMenuItem(value: value, child: Text(value, style: TextStyle(fontSize: 20),));
-              }).toList(),
-              )
+      appBar: AppBar(
+        title: const Text("Add Measurement"),
+        elevation: 0,
+      ),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'assets/background.jpg',
+              fit: BoxFit.cover,
             ),
-
-            const SizedBox(height: 30,),
-
-            if(dropdownvalue == "Blood Pressure")
-              Row(children: [
-                Expanded(child: 
-                TextField(
-                  controller: sysController,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10)
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey[200],
-                    hintText: 'Systolic'
-                  ),
-                )),
-                const SizedBox(width: 10,),
-                const Text('/', style: TextStyle(fontSize: 20)),
-                const SizedBox(width: 10,),
-
-                Expanded(child:
-                TextField(
-                  controller: diaController,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10)
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey[200],
-                    hintText: 'Diastolic'
-                  ),
-                )),
-                const SizedBox(width: 10,),
-                const Text('mmHg', style: TextStyle(fontSize: 20),)
-              ],)
-            else
-              Row(children: [
-                Expanded(child: 
-                TextField(
-                controller: valueController,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10)
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey[200],
-                  hintText: dropdownvalue == "Heartbeat Rate"
-                  ? "Enter Heartbeat Value"
-                  : dropdownvalue == "Blood Oxygen Level"
-                  ? "Enter blood oxygen value"
-                  : "Enter Respiratory Rate"
-                ),
-              ),
-                ),
-                const SizedBox(width: 10,),
-                Text(
-                  dropdownvalue == "Heartbeat Rate"
-                ? "bpm"
-                : dropdownvalue == "Blood Oxygen Level"
-                ? "%"
-                : "breaths/min", style: TextStyle(fontSize: 20),),
-              ],),
-            
-            const SizedBox(height: 30,),
-
-            const Text('Select Date & Time:', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),),
-            const SizedBox(height: 30),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                IconButton(
-                  onPressed: _selectTime,
-                  icon: Icon(Icons.access_time_outlined, size: 30,),
+                const Text('Select Measurement Type:', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),),
+                const SizedBox(height: 30,),
+
+                // Dropdown for selecting measurement type
+                SizedBox(
+                  width: double.infinity,
+                  child: DropdownButtonFormField<String>(
+                  value: dropdownvalue, 
+                  isExpanded: true,
+                  onChanged:(String? newValue) {
+                    setState(() {
+                      dropdownvalue = newValue!;
+                    });
+                  },
+                  items: measurementTypes.map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem(value: value, child: Text(value, style: TextStyle(fontSize: 20),));
+                  }).toList(),
+                  )
                 ),
-                GestureDetector(
-                  onTap: _selectTime,
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey),
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    child: Text(
-                      selectedTime.format(context),
-                      style: const TextStyle(fontSize: 20)
+
+                const SizedBox(height: 30,),
+
+                if(dropdownvalue == "Blood Pressure")
+                  Row(children: [
+                    Expanded(child: 
+                    TextField(
+                      controller: sysController,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10)
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey[200],
+                        hintText: 'Systolic'
+                      ),
+                    )),
+                    const SizedBox(width: 10,),
+                    const Text('/', style: TextStyle(fontSize: 20)),
+                    const SizedBox(width: 10,),
+
+                    Expanded(child:
+                    TextField(
+                      controller: diaController,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10)
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey[200],
+                        hintText: 'Diastolic'
+                      ),
+                    )),
+                    const SizedBox(width: 10,),
+                    const Text('mmHg', style: TextStyle(fontSize: 20),)
+                  ],)
+                else
+                  Row(children: [
+                    Expanded(child: 
+                    TextField(
+                    controller: valueController,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10)
+                      ),
+                      filled: true,
+                      fillColor: Colors.grey[200],
+                      hintText: dropdownvalue == "Heartbeat Rate"
+                      ? "Enter Heartbeat Value"
+                      : dropdownvalue == "Blood Oxygen Level"
+                      ? "Enter blood oxygen value"
+                      : "Enter Respiratory Rate"
                     ),
                   ),
-                ),
-            
-                SizedBox(width: 20),
-                IconButton(
-                  onPressed: _selectDate, 
-                  icon: Icon(Icons.calendar_month, size: 30,)
-                ),
-                GestureDetector(
-                  onTap: _selectDate,
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey),
-                      borderRadius: BorderRadius.circular(5)
                     ),
-                    child: Text(
-                      '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
-                      style: const TextStyle(fontSize: 20)
+                    const SizedBox(width: 10,),
+                    Text(
+                      dropdownvalue == "Heartbeat Rate"
+                    ? "bpm"
+                    : dropdownvalue == "Blood Oxygen Level"
+                    ? "%"
+                    : "breaths/min", style: TextStyle(fontSize: 20),),
+                  ],),
+                
+                const SizedBox(height: 30,),
+
+                const Text('Select Date & Time:', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),),
+                const SizedBox(height: 30),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      onPressed: _selectTime,
+                      icon: Icon(Icons.access_time_outlined, size: 30,),
+                    ),
+                    GestureDetector(
+                      onTap: _selectTime,
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: Text(
+                          selectedTime.format(context),
+                          style: const TextStyle(fontSize: 20)
+                        ),
+                      ),
+                    ),
+                
+                    SizedBox(width: 20),
+                    IconButton(
+                      onPressed: _selectDate, 
+                      icon: Icon(Icons.calendar_month, size: 30,)
+                    ),
+                    GestureDetector(
+                      onTap: _selectDate,
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(5)
+                        ),
+                        child: Text(
+                          '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
+                          style: const TextStyle(fontSize: 20)
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 30),
+
+                Center(
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _submit,
+                      child: _isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text("Submit", 
+                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ),
               ],
             ),
-
-            const SizedBox(height: 30),
-
-            Center(
-              child: SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _submit,
-                  child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text("Submit", 
-                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                ),
-              ),
-            ),
-          ],
-        ),
-        ),
+          ),
+        ]
+      )
     );
   }
 }

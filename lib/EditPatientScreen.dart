@@ -132,10 +132,21 @@ class _EditPatientPageState extends State<EditPatientPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit Patient')),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
+      appBar: AppBar(
+        title: const Text('Edit Patient'),
+        elevation: 0,
+      ),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'assets/background.jpg',
+              fit: BoxFit.cover,
+            ),
+          ),
+          _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Form(
                 key: _formKey,
@@ -236,6 +247,8 @@ class _EditPatientPageState extends State<EditPatientPage> {
                 ),
               ),
             ),
+        ]
+      )
     );
   }
 }

@@ -148,117 +148,130 @@ class _PatientListState extends State<PatientListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Patient List")),
-      body: Column(
+      appBar: AppBar(
+        title: const Text("Patient List"),
+        elevation: 0,
+      ),
+      body: Stack(
         children: [
-          Padding(
-            padding: EdgeInsets.all(18),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: searchController,
-                    onChanged: (value) => filterSearch(value),
-                    decoration: InputDecoration(
-                        hintText: 'Search',
-                        hintStyle: TextStyle(fontSize: 20),
-                        prefixIcon: Icon(Icons.search, size: 30,),
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10))),
-                  ),
-                ),
-                IconButton(
-                  onPressed: _addPatient,
-                  icon: Icon(Icons.person_add, color: Colors.black),
-                  iconSize: 30,
-                ),
-              ],
+          Positioned.fill(
+            child: Image.asset(
+              'assets/background.jpg',
+              fit: BoxFit.cover,
             ),
           ),
-          Expanded(
-              child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : filteredPatients.isEmpty
-                    ? const Center(
-                        child: Text(
-                          "No patients found",
-                          style: TextStyle(fontSize: 20, color: Colors.grey),
-                        ),
-                      )
-               : ListView.builder(
-                  padding: EdgeInsets.all(18),
-                  itemCount: filteredPatients.length,
-                  itemBuilder: (context, index) {
-                    final patient = filteredPatients[index];
-                    return Dismissible(
-                      key: Key(patient['_id']),
-                      direction: DismissDirection.endToStart,
-                      background: Container(
-                        color: Colors.red,
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: const Icon(Icons.delete, color: Colors.white),
+          Column(
+            children: [
+              Padding(
+                padding: EdgeInsets.all(18),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: searchController,
+                        onChanged: (value) => filterSearch(value),
+                        decoration: InputDecoration(
+                            hintText: 'Search',
+                            hintStyle: TextStyle(fontSize: 20),
+                            prefixIcon: Icon(Icons.search, size: 30,),
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10))),
                       ),
-                      confirmDismiss: (direction) async {
-                        final shouldDelete = await showDialog<bool>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text("Confirm Deletion"),
-                            content: const Text("Are you sure you want to delete this patient?"), 
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: const Text("Cancel"),
-                              ),
-                              ElevatedButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: const Text("Delete"),
-                              ),
-                            ],
+                    ),
+                    IconButton(
+                      onPressed: _addPatient,
+                      icon: Icon(Icons.person_add, color: Colors.black),
+                      iconSize: 30,
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                  child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : filteredPatients.isEmpty
+                        ? const Center(
+                            child: Text(
+                              "No patients found",
+                              style: TextStyle(fontSize: 20, color: Colors.grey),
+                            ),
+                          )
+                  : ListView.builder(
+                      padding: EdgeInsets.all(18),
+                      itemCount: filteredPatients.length,
+                      itemBuilder: (context, index) {
+                        final patient = filteredPatients[index];
+                        return Dismissible(
+                          key: Key(patient['_id']),
+                          direction: DismissDirection.endToStart,
+                          background: Container(
+                            color: Colors.red,
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: const Icon(Icons.delete, color: Colors.white),
                           ),
-                        );
-
-                        if (shouldDelete == true) {
-                          _deletePatient(patient['_id']);
-                          return true; // Allow to Dismiss
-                        }
-                        return false; // No Allow to Dismiss
-                      },
-                      child: Card(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-                        color: patient['condition'] == 'Critical'
-                            ? const Color.fromARGB(255, 233, 144, 137)
-                            : const Color.fromARGB(255, 230, 230, 230),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(left: 16.0),
-                              child:
-                              Row(
-                                children: [
-                                  Text(patient['patientId'] as String,
-                                    style: TextStyle(fontSize: 18),
+                          confirmDismiss: (direction) async {
+                            final shouldDelete = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text("Confirm Deletion"),
+                                content: const Text("Are you sure you want to delete this patient?"), 
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context, false),
+                                    child: const Text("Cancel"),
                                   ),
-                                  SizedBox(width: 20,),
-                                  Text(patient['name'] as String,
-                                    style: TextStyle(fontSize: 20),
+                                  ElevatedButton(
+                                    onPressed: () => Navigator.pop(context, true),
+                                    child: const Text("Delete"),
                                   ),
                                 ],
                               ),
+                            );
+
+                            if (shouldDelete == true) {
+                              _deletePatient(patient['_id']);
+                              return true; // Allow to Dismiss
+                            }
+                            return false; // No Allow to Dismiss
+                          },
+                          child: Card(
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+                            color: patient['condition'] == 'Critical'
+                                ? const Color.fromARGB(255, 233, 144, 137)
+                                : const Color.fromARGB(255, 230, 230, 230),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 16.0),
+                                  child:
+                                  Row(
+                                    children: [
+                                      Text(patient['patientId'] as String,
+                                        style: TextStyle(fontSize: 18),
+                                      ),
+                                      SizedBox(width: 20,),
+                                      Text(patient['name'] as String,
+                                        style: TextStyle(fontSize: 20),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: () => _viewPatientDetails(patient),
+                                  icon: const Icon(Icons.info, color: Colors.blue),
+                                  iconSize: 30,
+                                ),
+                              ],
                             ),
-                            IconButton(
-                              onPressed: () => _viewPatientDetails(patient),
-                              icon: const Icon(Icons.info, color: Colors.blue),
-                              iconSize: 30,
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }))
-        ],
-      ),
+                          ),
+                        );
+                      }))
+            ],
+          ),
+        ]
+      )
     );
   }
 }
